@@ -20,6 +20,9 @@ Registro cronológico das decisões, para não se perder entre conversas.
   rascunho automático, para evitar retrabalho de refazer por cima. Aguardando ela enviar.
 - **D7 — Documentação no GitHub.** Projeto de software; docs versionados ao lado do código. Notion
   eventualmente como espelho de leitura, não como fonte da verdade.
+- **D8 — Repo criado e preparado para o Claude Code.** Adicionados `CLAUDE.md` (raiz, curto e estável,
+  apontando para os `docs/`), `.gitignore` (protege `.env`), `.env.example` e `package.json` mínimo.
+  Ao abrir o repo no Claude Code, o `CLAUDE.md` é lido automaticamente no início da sessão.
 
 ## Validações registradas
 

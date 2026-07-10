@@ -1,0 +1,13 @@
+{
+  "name": "escritorio-iza",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Automação do escritório de projeto legal — Izabela Braga Arquitetura",
+  "scripts": {
+    "validar": "node scripts/validar-get-pbh.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
