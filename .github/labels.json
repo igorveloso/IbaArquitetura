@@ -1,0 +1,12 @@
+[
+  { "name": "bug",              "color": "d73a4a", "description": "Algo está quebrado ou não funciona como devia" },
+  { "name": "funcionalidade",   "color": "1d76db", "description": "Nova ideia ou recurso a explorar" },
+
+  { "name": "urgência: alta",   "color": "b60205", "description": "Travou o trabalho — resolver o quanto antes" },
+  { "name": "urgência: média",  "color": "fbca04", "description": "Atrapalha, mas dá pra continuar" },
+  { "name": "urgência: baixa",  "color": "c2e0c6", "description": "Incômodo pequeno, sem pressa" },
+
+  { "name": "ideia",            "color": "d4c5f9", "description": "Funcionalidade ainda não avaliada" },
+  { "name": "validado",         "color": "0e8a16", "description": "Aprovada — pode construir" },
+  { "name": "descartado",       "color": "e4e669", "description": "Decidido não fazer (por ora)" }
+]

@@ -1,0 +1,39 @@
+name: "💡 Nova funcionalidade / ideia"
+description: "Uma ideia de algo novo pro sistema fazer. Pode vir bruta — a gente lapida depois."
+title: "[Ideia] "
+labels: ["funcionalidade", "ideia"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Toda ideia é bem-vinda. Preencha o que fizer sentido — nem tudo é obrigatório.
+        Ideias entram como **ideia**; se forem aprovadas viram **validado** e aí sim a gente constrói.
+  - type: textarea
+    id: ideia
+    attributes:
+      label: "Qual é a ideia?"
+      description: "Descreva com as suas palavras o que você gostaria que o sistema fizesse."
+      placeholder: "Ex: um botão que gera o checklist já em PDF com a marca do escritório."
+    validations:
+      required: true
+  - type: textarea
+    id: problema
+    attributes:
+      label: "Que problema isso resolve?"
+      description: "Que dor do dia a dia isso tira?"
+      placeholder: "Ex: hoje eu monto o PDF na mão toda vez, demora e às vezes esqueço um documento."
+    validations:
+      required: false
+  - type: input
+    id: quem
+    attributes:
+      label: "Pra quem isso ajuda?"
+      placeholder: "Ex: a Bebela, a Letícia, o cliente final..."
+    validations:
+      required: false
+  - type: textarea
+    id: extra
+    attributes:
+      label: "Algo mais? (referências, exemplos, prints)"
+    validations:
+      required: false

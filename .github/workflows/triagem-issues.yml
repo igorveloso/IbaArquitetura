@@ -1,0 +1,82 @@
+name: Triagem de issues
+
+# Automações leves de gestão. Tudo em cima de eventos de issue, sem dependência externa
+# (usa só actions/github-script, oficial). Este workflow só roda a partir da main.
+on:
+  issues:
+    types: [opened, edited, labeled]
+
+permissions:
+  issues: write
+
+jobs:
+  # 1) Lê a urgência escolhida no formulário de bug e aplica a label urgência: alta/média/baixa.
+  #    Assim o Igor não precisa marcar na mão — bug urgente já nasce sinalizado.
+  urgencia:
+    if: >-
+      (github.event.action == 'opened' || github.event.action == 'edited') &&
+      contains(github.event.issue.labels.*.name, 'bug')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const body = (context.payload.issue.body || '').toLowerCase();
+            const mapa = [
+              { marca: 'travou meu trabalho', label: 'urgência: alta' },
+              { marca: 'atrapalha, mas consigo', label: 'urgência: média' },
+              { marca: 'incômodo pequeno', label: 'urgência: baixa' },
+            ];
+            const achado = mapa.find(m => body.includes(m.marca));
+            if (!achado) { core.info('Urgência não identificada no corpo da issue.'); return; }
+
+            const atuais = context.payload.issue.labels.map(l => l.name);
+            // Se a issue foi editada e a urgência mudou, remove a label antiga.
+            for (const m of mapa) {
+              if (m.label !== achado.label && atuais.includes(m.label)) {
+                await github.rest.issues.removeLabel({
+                  ...context.repo, issue_number: context.issue.number, name: m.label,
+                }).catch(() => {});
+              }
+            }
+            if (!atuais.includes(achado.label)) {
+              await github.rest.issues.addLabels({
+                ...context.repo, issue_number: context.issue.number, labels: [achado.label],
+              });
+              core.info('Aplicada: ' + achado.label);
+            }
+
+  # 2) Acuse de recebimento: comenta na issue nova pra quem reportou saber que chegou.
+  #    Importante pro pessoal do escritório, que não vive no GitHub.
+  boas_vindas:
+    if: github.event.action == 'opened'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const ehBug = context.payload.issue.labels.some(l => l.name === 'bug');
+            const msg = ehBug
+              ? 'Recebido! 🛠️ Obrigada por reportar. Já está na nossa caixa de entrada — vamos priorizar pela urgência e te dar um retorno.'
+              : 'Ideia recebida! 💡 Obrigada. Vamos avaliar e, se fizer sentido, marcar como **validado** pra entrar na fila de construção.';
+            await github.rest.issues.createComment({
+              ...context.repo, issue_number: context.issue.number, body: msg,
+            });
+
+  # 3) Ao marcar uma issue como "descartado", fecha automaticamente com um comentário.
+  #    Mantém o backlog limpo sem perder o histórico.
+  fechar_descartado:
+    if: github.event.action == 'labeled' && github.event.label.name == 'descartado'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              ...context.repo, issue_number: context.issue.number,
+              body: 'Marcada como **descartado** — fechando por ora. Fica registrada no histórico e pode ser reaberta a qualquer momento se mudar de ideia.',
+            });
+            await github.rest.issues.update({
+              ...context.repo, issue_number: context.issue.number,
+              state: 'closed', state_reason: 'not_planned',
+            });

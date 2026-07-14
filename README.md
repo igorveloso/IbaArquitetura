@@ -31,6 +31,7 @@ Codinome de trabalho: **escritorio-iza** (renomeável).
 - [`docs/03-achados-tecnicos.md`](docs/03-achados-tecnicos.md) — validação do GET, contrato de extração, achados do doc da PBH
 - [`docs/04-de-para.md`](docs/04-de-para.md) — o que é, esqueleto sugerido, status (aguardando Bebela)
 - [`docs/05-log-de-decisoes.md`](docs/05-log-de-decisoes.md) — registro das decisões com data
+- [`docs/06-gestao-de-issues.md`](docs/06-gestao-de-issues.md) — como pedir funcionalidades e reportar bugs (esteiras, labels, contrato de API)
 
 ## Artefatos
 

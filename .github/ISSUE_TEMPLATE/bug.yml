@@ -1,0 +1,56 @@
+name: "🐛 Reportar um erro"
+description: "Algo não funcionou como devia? Conta pra gente aqui — a gente arruma rápido."
+title: "[Erro] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigada por avisar! 🙏 Preencha o que conseguir. Quanto mais detalhe, mais rápido a gente resolve.
+  - type: textarea
+    id: o-que-aconteceu
+    attributes:
+      label: "O que aconteceu?"
+      description: "Descreva o erro com as suas palavras."
+      placeholder: "Ex: cliquei em 'gerar checklist' e a tela ficou branca."
+    validations:
+      required: true
+  - type: textarea
+    id: o-que-esperava
+    attributes:
+      label: "O que você esperava que acontecesse?"
+      placeholder: "Ex: esperava que aparecesse a lista de documentos do cliente."
+    validations:
+      required: false
+  - type: input
+    id: onde
+    attributes:
+      label: "Em qual tela ou parte do sistema?"
+      placeholder: "Ex: tela de novo projeto"
+    validations:
+      required: false
+  - type: dropdown
+    id: urgencia
+    attributes:
+      label: "Quão urgente é?"
+      description: "Isso ajuda a gente a saber o que atacar primeiro."
+      options:
+        - "Baixa — incômodo pequeno, dá pra conviver"
+        - "Média — atrapalha, mas consigo continuar"
+        - "Alta — travou meu trabalho, preciso hoje"
+    validations:
+      required: true
+  - type: textarea
+    id: print
+    attributes:
+      label: "Print ou foto (se tiver)"
+      description: "É só arrastar a imagem pra cá. Ajuda muito!"
+    validations:
+      required: false
+  - type: input
+    id: quem
+    attributes:
+      label: "Seu nome"
+      description: "Pra gente saber com quem falar se precisar de mais detalhes."
+    validations:
+      required: false
