@@ -34,6 +34,13 @@ Registro cronológico das decisões, para não se perder entre conversas.
   (futura) via função serverless → GitHub API; o contrato desse fluxo está em
   [`06-gestao-de-issues.md`](06-gestao-de-issues.md). O formulário web fica como porta de emergência.
 
+- **D10 — Primeiro código de aplicação: o Painel Bebela.** Implementado o protótipo "Painel Bebela.dc.html"
+  (projeto Claude Design "Plataforma de gestão para arquiteta") como app real em `app/painel-bebela/`.
+  Decidido portar como **HTML único autossuficiente + JS vanilla** (sem build), trocando o runtime
+  `DCLogic` do Claude Design por um mini-render próprio, e mantendo a lógica de negócio do protótipo.
+  Persistência local (`localStorage`) por ora — backend/sincronização e auth ficam para depois. É um
+  quadro de gestão de projetos (5 telas), separado da esteira de Bugs/Funcionalidades do D9.
+
 ## Validações registradas
 
 - **GET no doc da PBH: CONFIRMADO ao vivo** (10/07/2026). Ver [`03-achados-tecnicos.md`](03-achados-tecnicos.md).

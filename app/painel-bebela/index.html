@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel de projetos — Izabela Braga Arquitetura</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#14100e;font-family:'Space Grotesk',system-ui,sans-serif;color:#ece4da}
+  a{color:#c9a06a}a:hover{color:#e0bd8a}
+  ::selection{background:rgba(163,173,149,.3)}
+  input,textarea,select,button{font-family:'Space Grotesk',system-ui,sans-serif}
+  ::-webkit-scrollbar{height:10px;width:10px}::-webkit-scrollbar-thumb{background:#2a231d;border-radius:99px}::-webkit-scrollbar-track{background:transparent}
+  @keyframes cardIn{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+  @keyframes screenIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @keyframes entryIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+  @keyframes glowPulse{0%,100%{box-shadow:0 0 0 1px rgba(194,106,74,.15),0 6px 24px rgba(194,106,74,.07)}50%{box-shadow:0 0 0 1px rgba(194,106,74,.35),0 6px 30px rgba(194,106,74,.18)}}
+  @keyframes dotPop{0%{transform:scale(0)}70%{transform:scale(1.4)}100%{transform:scale(1)}}
+  @keyframes toastIn{0%{opacity:0;transform:translateY(16px) scale(.96)}100%{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+"use strict";
+/*
+  Painel Bebela — implementação real do protótipo "Painel Bebela.dc.html"
+  (projeto Claude Design "Plataforma de gestão para arquiteta").
+
+  A lógica de negócio (renderVals + mutações + seed) é portada quase literalmente
+  do protótipo. O que muda é o runtime: no lugar do DCLogic/support.js do Claude
+  Design, um mini-render vanilla que:
+    - reconstrói a tela a cada mudança de estado (innerHTML);
+    - preserva foco e posição do cursor nos campos entre re-renders;
+    - reproduz os efeitos de hover/focus (style-hover / style-focus do protótipo).
+  Persistência local em localStorage (chave "iba-painel-v2"). Sem backend ainda.
+*/
+
+class Panel {
+  constructor(p) {
+    this.props = p;
+    const D = 864e5, now = Date.now();
+    const seed = {
+      fases: [{id:1,nome:'Orçamento'},{id:2,nome:'Estudo'},{id:3,nome:'Desenvolvimento'},{id:4,nome:'Revisão'},{id:5,nome:'Concluído'}],
+      pessoas: [{id:1,nome:'Bebela'},{id:2,nome:'Letícia'}],
+      projects: [
+        {id:1,nome:'Regularização — Casa Serra',cliente:'Mariana Duarte',fase:1,bola:'Cliente',pausa:false,arq:false,link:'https://onedrive.live.com',mud:now-6*D},
+        {id:2,nome:'Projeto legal — Ed. Contorno 1204',cliente:'Construtora Alvorada',fase:1,bola:'Bebela',pausa:false,arq:false,link:'https://onedrive.live.com',mud:now-4*D},
+        {id:3,nome:'Desmembramento — Lote Pampulha',cliente:'Sérgio Antunes',fase:2,bola:'Letícia',pausa:false,arq:false,link:'https://onedrive.live.com',mud:now-1*D},
+        {id:4,nome:'Modificação — Casa Cidade Jardim',cliente:'Paulo & Renata Gomes',fase:3,bola:'Letícia',pausa:false,arq:false,link:'https://onedrive.live.com',mud:now-12*D},
+        {id:5,nome:'Unificação — Lotes Buritis',cliente:'Família Starling',fase:3,bola:'Cliente',pausa:true,arq:false,link:'https://onedrive.live.com',mud:now-23*D},
+        {id:6,nome:"Projeto legal — Galpão Olhos d'Água",cliente:'TransMinas Log',fase:4,bola:'Bebela',pausa:false,arq:false,link:'https://onedrive.live.com',mud:now-3*D},
+        {id:7,nome:'Regularização — Sobrado Floresta',cliente:'Igreja Batista Central',fase:4,bola:'Cliente',pausa:false,arq:false,link:'https://onedrive.live.com',mud:now-9*D},
+        {id:8,nome:'Projeto legal — Clínica Savassi',cliente:'Dra. Helena Prado',fase:5,bola:'Bebela',pausa:false,arq:false,link:'https://onedrive.live.com',mud:now-15*D}
+      ],
+      registros: [
+        {id:1,pid:4,t:now-12*D,texto:'Letícia iniciou a planta de modificação. Falta compatibilizar com o levantamento topográfico.',link:'',autor:'Letícia'},
+        {id:2,pid:4,t:now-20*D,texto:'Projeto criado',link:'',autor:'Bebela'},
+        {id:3,pid:6,t:now-3*D,texto:'Recebi a versão revisada do galpão. Próxima ação: conferir as áreas com o de-para da PBH.',link:'https://onedrive.live.com',autor:'Bebela'},
+        {id:4,pid:6,t:now-8*D,texto:'Encaminhado para a Letícia com observações sobre os afastamentos laterais.',link:'',autor:'Bebela'},
+        {id:5,pid:5,t:now-23*D,texto:'Projeto pausado — cliente vai decidir sobre a unificação após o inventário.',link:'',autor:'Bebela'},
+        {id:6,pid:1,t:now-6*D,texto:'Enviado orçamento por e-mail. Aguardando retorno da Mariana.',link:'',autor:'Bebela'},
+        {id:7,pid:7,t:now-9*D,texto:'Correções enviadas ao cliente para validar antes do protocolo na PBH.',link:'',autor:'Bebela'},
+        {id:8,pid:8,t:now-15*D,texto:'Alvará emitido! Projeto entregue à Dra. Helena. 🎉',link:'',autor:'Bebela'},
+        {id:9,pid:3,t:now-1*D,texto:'Levantamento do lote concluído. Iniciando o estudo de desmembramento.',link:'',autor:'Letícia'},
+        {id:10,pid:2,t:now-4*D,texto:'Proposta pronta para revisão final antes de enviar à construtora.',link:'',autor:'Letícia'}
+      ],
+      tarefas: [
+        {id:1,pid:6,texto:'Conferir áreas com o de-para da PBH',resp:'Bebela',prazo: new Date(now+2*D).toISOString().slice(0,10),done:false},
+        {id:2,pid:6,texto:'Revisar afastamentos laterais',resp:'Bebela',prazo: new Date(now-1*D).toISOString().slice(0,10),done:false},
+        {id:3,pid:6,texto:'Compatibilizar pranchas de cobertura',resp:'Letícia',prazo:'',done:true},
+        {id:4,pid:4,texto:'Compatibilizar planta com levantamento topográfico',resp:'Letícia',prazo: new Date(now+4*D).toISOString().slice(0,10),done:false},
+        {id:5,pid:4,texto:'Aprovar memorial descritivo',resp:'Bebela',prazo: new Date(now+7*D).toISOString().slice(0,10),done:false},
+        {id:6,pid:2,texto:'Revisão final da proposta antes de enviar',resp:'Bebela',prazo: new Date(now+1*D).toISOString().slice(0,10),done:false},
+        {id:7,pid:3,texto:'Iniciar estudo de desmembramento',resp:'Letícia',prazo:'',done:false},
+        {id:8,pid:7,texto:'Protocolar na PBH após retorno do cliente',resp:'Bebela',prazo:'',done:false}
+      ],
+      nextId: 100
+    };
+    let data = seed;
+    try { const raw = localStorage.getItem('iba-painel-v2'); if (raw) data = this.migrate(JSON.parse(raw)); } catch (e) {}
+    this.state = { data, tela:'board', sel:null, confArq:false, editLink:false, linkDraft:'',
+      novoTexto:'', novoLink:'', novoAutor:'Bebela', cNome:'', cCliente:'', cFase:0, cBola:'Cliente', cLink:'',
+      novaFase:'', novaPessoa:'', avisoFase:'', toast:'', bornId:null,
+      novaTarefa:'', novaTarefaResp:'', novaTarefaPrazo:'', tasksFiltro:'Bebela', tasksIncluirFeitas:false };
+  }
+  migrate(data) { if (!data.tarefas) data.tarefas = []; return data; }
+  commit(mut) { this.setState(s => { const data = JSON.parse(JSON.stringify(s.data)); mut(data); try { localStorage.setItem('iba-painel-v2', JSON.stringify(data)); } catch (e) {} return { data }; }); }
+  toast(msg) { this.setState({ toast: msg }); clearTimeout(this._tt); this._tt = setTimeout(() => this.setState({ toast: '' }), 2600); }
+  log(data, pid, texto, autor, link) { data.registros.unshift({ id: data.nextId++, pid, t: Date.now(), texto, link: link || '', autor: autor || 'Bebela' }); }
+  touch(data, pid) { const p = data.projects.find(x => x.id === pid); if (p) p.mud = Date.now(); }
+
+  // ----- mini-runtime -----
+  setState(patch) {
+    // captura foco + cursor antes de reconstruir o DOM
+    let fid = null, ss = null, se = null;
+    const ae = document.activeElement;
+    if (ae && ae.getAttribute) { fid = ae.getAttribute('data-fid'); try { ss = ae.selectionStart; se = ae.selectionEnd; } catch (e) {} }
+    const next = (typeof patch === 'function') ? patch(this.state) : patch;
+    this.state = Object.assign({}, this.state, next);
+    this.render();
+    if (fid) { const el = this.root.querySelector('[data-fid="' + fid + '"]'); if (el) { el.focus(); try { if (ss != null) el.setSelectionRange(ss, se); } catch (e) {} } }
+  }
+  mount(el) { this.root = el; this.render(); }
+  render() {
+    const V = this.renderVals();
+    const H = []; this._H = H;
+    const reg = fn => (H.push(fn), H.length - 1);
+    const esc = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const chip = c => `<button data-h="${reg(c.set)}" style="background:${c.bg};border:1px solid ${c.bd};color:${c.cor};border-radius:99px;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s" data-hover="border-color:rgba(163,173,149,.6)">${esc(c.nome)}</button>`;
+    const opts = (sel, blank) => (blank ? '<option value="">Responsável (opc.)</option>' : '') +
+      V.pessoasOpts.map(p => `<option value="${esc(p.nome)}" ${p.nome === sel ? 'selected' : ''}>${esc(p.nome)}</option>`).join('');
+
+    let html = '<div style="min-height:100vh;background:radial-gradient(1200px 500px at 70% -10%,rgba(163,173,149,.05),transparent),#14100e">';
+
+    // ---------------- QUADRO ----------------
+    if (V.isBoard) {
+      html += `<div style="animation:screenIn .35s ease both">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;padding:20px 28px;border-bottom:1px solid rgba(236,228,218,.07)">
+          <div style="display:flex;align-items:center;gap:14px">
+            <div style="height:44px;width:44px;border-radius:12px;background:linear-gradient(135deg,#a3ad95,#c9a06a);display:flex;align-items:center;justify-content:center;color:#14100e;font-weight:700;font-size:17px">ib</div>
+            <div>
+              <div style="font-size:17px;font-weight:600;letter-spacing:.02em">Painel de projetos</div>
+              <div style="font-size:12.5px;color:#8d8578">${esc(V.greeting)}</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <button data-h="${reg(V.goTasks)}" style="background:none;border:1px solid rgba(236,228,218,.15);color:#c7bfb2;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s" data-hover="color:#ece4da;border-color:rgba(236,228,218,.35)">Minhas tarefas</button>
+            <button data-h="${reg(V.goCreate)}" style="display:flex;align-items:center;gap:8px;background:#a3ad95;color:#14100e;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s" data-hover="background:#b4bea6;transform:translateY(-1px)">＋ Novo projeto</button>
+            <button data-h="${reg(V.goSettings)}" title="Configurações" style="background:none;border:1px solid rgba(236,228,218,.15);color:#8d8578;border-radius:8px;width:40px;height:40px;font-size:15px;cursor:pointer;transition:all .2s" data-hover="color:#ece4da;border-color:rgba(236,228,218,.35)">⚙</button>
+          </div>
+        </div>`;
+      if (V.prazoAviso) {
+        html += `<div data-h="${reg(V.goTasks)}" style="margin:18px 28px 0;background:${V.prazoAvisoBg};border:1px solid ${V.prazoAvisoBd};border-radius:12px;padding:13px 18px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:transform .2s" data-hover="transform:translateY(-1px)">
+          <span style="font-size:18px">${esc(V.prazoAvisoIcon)}</span>
+          <span style="font-size:13.5px;color:#ece4da;flex:1">${esc(V.prazoAvisoMsg)}</span>
+          <span style="font-size:12.5px;font-weight:600;color:#c7bfb2;white-space:nowrap">Ver tarefas →</span>
+        </div>`;
+      }
+      html += '<div style="display:flex;gap:16px;padding:26px 28px 40px;align-items:flex-start;overflow-x:auto">';
+      html += V.columns.map(col => {
+        let c = `<div style="width:262px;min-width:240px;flex:none;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:baseline;gap:8px;padding:0 4px">
+            <span style="font-size:13px;font-weight:600;color:#c7bfb2;text-transform:uppercase;letter-spacing:.1em">${esc(col.nome)}</span>
+            <span style="font-size:12px;color:#6f675b">${col.count}</span>
+          </div>`;
+        c += col.cards.map(card => {
+          let f = '';
+          if (card.temTarefas) {
+            f = `<div style="display:flex;align-items:center;gap:8px;margin-top:12px;padding-top:11px;border-top:1px solid rgba(236,228,218,.06)">
+              <span style="font-size:11.5px;color:#8d8578">☑ ${esc(card.tarefasLabel)}</span>
+              ${card.temAtraso ? `<span style="font-size:10.5px;font-weight:700;color:#c26a4a;background:rgba(194,106,74,.14);padding:2px 8px;border-radius:99px">${esc(card.atrasoLabel)}</span>` : ''}
+              ${card.temHoje ? `<span style="font-size:10.5px;font-weight:700;color:#d0965a;background:rgba(210,150,90,.14);padding:2px 8px;border-radius:99px">${esc(card.hojeLabel)}</span>` : ''}
+            </div>`;
+          }
+          return `<div data-h="${reg(card.open)}" style="background:#1d1713;border:1px solid ${card.border};border-radius:12px;padding:16px;cursor:pointer;opacity:${card.opacity};animation:cardIn .5s ${card.delay} cubic-bezier(.2,.8,.3,1) both${card.pulse};transition:transform .25s cubic-bezier(.2,.8,.3,1),border-color .25s,box-shadow .25s" data-hover="transform:translateY(-3px);border-color:rgba(163,173,149,.45);box-shadow:0 10px 28px rgba(0,0,0,.45)">
+            <div style="display:flex;align-items:flex-start;gap:8px;justify-content:space-between">
+              <div style="font-size:15px;font-weight:600;line-height:1.3;text-wrap:pretty">${esc(card.nome)}</div>
+              ${card.pausado ? '<span style="flex:none;font-size:9.5px;font-weight:600;color:#8d8578;border:1px solid rgba(141,133,120,.4);padding:2px 7px;border-radius:99px;white-space:nowrap">❚❚ pausa</span>' : ''}
+            </div>
+            <div style="font-size:12.5px;color:#8d8578;margin:3px 0 12px">${esc(card.cliente)}</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+              <span style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:99px;background:${card.bolaBg};color:${card.bolaCor}">${esc(card.bolaLabel)}</span>
+              <span style="font-size:12px;font-weight:${card.tempoPeso};color:${card.tempoCor};white-space:nowrap">${esc(card.tempo)}</span>
+            </div>${f}
+          </div>`;
+        }).join('');
+        if (col.vazia) c += `<div style="border:1px dashed rgba(236,228,218,.12);border-radius:12px;padding:22px 16px;text-align:center;font-size:12px;color:#6f675b;line-height:1.5">${esc(col.vazioMsg)}</div>`;
+        return c + '</div>';
+      }).join('');
+      html += '</div></div>';
+    }
+
+    // ---------------- DETALHE ----------------
+    if (V.isDetail) {
+      const d = V.det;
+      html += `<div style="animation:screenIn .35s ease both;max-width:860px;margin:0 auto;padding:24px 28px 60px">
+        <button data-h="${reg(V.goBoard)}" style="background:none;border:none;color:#8d8578;font-size:13px;cursor:pointer;padding:6px 0;display:flex;align-items:center;gap:6px;transition:color .2s" data-hover="color:#ece4da">← Voltar ao quadro</button>
+        <div style="background:#1d1713;border:1px solid rgba(236,228,218,.07);border-radius:16px;padding:26px 28px;margin-top:14px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap">
+            <div>
+              <div style="font-size:23px;font-weight:600;line-height:1.25;text-wrap:pretty">${esc(d.nome)}</div>
+              <div style="font-size:14px;color:#8d8578;margin-top:4px">${esc(d.cliente)}</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button data-h="${reg(d.togglePausa)}" style="background:none;border:1px solid rgba(236,228,218,.18);color:#c7bfb2;border-radius:99px;padding:9px 18px;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .2s" data-hover="border-color:#a3ad95;color:#a3ad95">${esc(d.pausaLabel)}</button>
+              <button data-h="${reg(d.arquivar)}" style="background:${d.archBg};border:1px solid rgba(194,106,74,.35);color:#c26a4a;border-radius:99px;padding:9px 18px;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .2s" data-hover="background:rgba(194,106,74,.12)">${esc(d.archLabel)}</button>
+            </div>
+          </div>
+          ${d.pausado ? '<div style="margin-top:16px;background:rgba(141,133,120,.1);border:1px solid rgba(141,133,120,.25);border-radius:10px;padding:10px 14px;font-size:12.5px;color:#a89f90">❚❚ Projeto em pausa — o tempo parado não gera alarme.</div>' : ''}
+          <div style="margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:20px">
+            <div>
+              <div style="font-size:11px;color:#6f675b;text-transform:uppercase;letter-spacing:.12em;margin-bottom:9px">Fase</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px">${d.faseChips.map(chip).join('')}</div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:#6f675b;text-transform:uppercase;letter-spacing:.12em;margin-bottom:9px">Responsável agora</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px">${d.bolaChips.map(chip).join('')}</div>
+              <div style="font-size:12px;margin-top:10px;font-weight:${d.tempoPeso};color:${d.tempoCor}">${esc(d.tempoTexto)}</div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:#6f675b;text-transform:uppercase;letter-spacing:.12em;margin-bottom:9px">Pasta no OneDrive</div>
+              ${d.editandoLink ? `<div style="display:flex;gap:6px">
+                  <input data-fid="linkDraft" data-ch="${reg(d.setLinkDraft)}" value="${esc(d.linkDraft)}" placeholder="https://onedrive…" style="flex:1;min-width:0;background:#14100e;border:1px solid rgba(236,228,218,.15);color:#ece4da;border-radius:8px;padding:8px 10px;font-size:12.5px;outline:none">
+                  <button data-h="${reg(d.salvarLink)}" style="background:#a3ad95;color:#14100e;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer">OK</button>
+                </div>`
+              : `<div style="display:flex;align-items:center;gap:8px">
+                  <a href="${esc(d.link)}" target="_blank" rel="noopener" style="font-size:13px;text-decoration:none;color:#a3ad95;border-bottom:1px dotted rgba(163,173,149,.5)">${esc(d.linkLabel)}</a>
+                  <button data-h="${reg(d.editarLink)}" style="background:none;border:none;color:#6f675b;font-size:12px;cursor:pointer" data-hover="color:#ece4da">✎</button>
+                </div>`}
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:30px">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px">
+            <div style="font-size:15px;font-weight:600">Tarefas <span style="color:#6f675b;font-weight:400;font-size:13px">${esc(d.tarefasResumo)}</span></div>
+          </div>
+          <div style="background:#1d1713;border:1px solid rgba(236,228,218,.07);border-radius:14px;overflow:hidden">
+            ${d.tarefas.map(t => `<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid rgba(236,228,218,.05)">
+              <button data-h="${reg(t.toggle)}" style="flex:none;width:20px;height:20px;border-radius:6px;border:1.5px solid ${t.checkBd};background:${t.checkBg};color:#14100e;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s">${esc(t.check)}</button>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13.5px;color:${t.textoCor};text-decoration:${t.deco};text-wrap:pretty">${esc(t.texto)}</div>
+                <div style="display:flex;align-items:center;gap:10px;margin-top:3px">
+                  ${t.temResp ? `<span style="font-size:11px;font-weight:600;color:${t.respCor}">${esc(t.resp)}</span>` : ''}
+                  ${t.temPrazo ? `<span style="font-size:11px;font-weight:${t.prazoPeso};color:${t.prazoCor}">${esc(t.prazoLabel)}</span>` : ''}
+                </div>
+              </div>
+              <button data-h="${reg(t.remover)}" style="flex:none;background:none;border:none;color:#6f675b;font-size:13px;cursor:pointer;padding:2px 6px" data-hover="color:#c26a4a">✕</button>
+            </div>`).join('')}
+            <div style="padding:12px 16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <input data-fid="novaTarefa" data-ch="${reg(V.setNovaTarefa)}" value="${esc(V.novaTarefa)}" placeholder="Nova tarefa…" style="flex:1;min-width:160px;background:#14100e;border:1px solid rgba(236,228,218,.12);color:#ece4da;border-radius:8px;padding:8px 11px;font-size:13px;outline:none">
+              <select data-fid="novaTarefaResp" data-ch="${reg(V.setNovaTarefaResp)}" style="background:#14100e;border:1px solid rgba(236,228,218,.12);color:#c7bfb2;border-radius:8px;padding:8px 10px;font-size:12px;outline:none">${opts(V.novaTarefaResp, true)}</select>
+              <input type="date" data-fid="novaTarefaPrazo" data-ch="${reg(V.setNovaTarefaPrazo)}" value="${esc(V.novaTarefaPrazo)}" style="background:#14100e;border:1px solid rgba(236,228,218,.12);color:#c7bfb2;border-radius:8px;padding:7px 10px;font-size:12px;outline:none;color-scheme:dark">
+              <button data-h="${reg(V.addTarefa)}" style="background:${V.addTarefaBg};color:#14100e;border:none;border-radius:8px;padding:8px 16px;font-size:12.5px;font-weight:600;cursor:${V.addTarefaCursor};transition:all .2s">Adicionar</button>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:30px">
+          <div style="font-size:15px;font-weight:600;margin-bottom:16px">Registro</div>
+          <div style="background:#1d1713;border:1px solid rgba(236,228,218,.07);border-radius:14px;padding:16px 18px;margin-bottom:22px">
+            <textarea data-fid="novoTexto" data-ch="${reg(V.setNovoTexto)}" placeholder="Adicionar uma anotação…" rows="2" style="width:100%;box-sizing:border-box;background:transparent;border:none;color:#ece4da;font-size:13.5px;resize:none;outline:none;line-height:1.5">${esc(V.novoTexto)}</textarea>
+            <div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap">
+              <input data-fid="novoLink" data-ch="${reg(V.setNovoLink)}" value="${esc(V.novoLink)}" placeholder="link OneDrive (opcional)" style="flex:1;min-width:150px;background:#14100e;border:1px solid rgba(236,228,218,.12);color:#c7bfb2;border-radius:8px;padding:7px 10px;font-size:12px;outline:none">
+              <select data-fid="novoAutor" data-ch="${reg(V.setNovoAutor)}" style="background:#14100e;border:1px solid rgba(236,228,218,.12);color:#c7bfb2;border-radius:8px;padding:7px 10px;font-size:12px;outline:none">${opts(V.novoAutor, false)}</select>
+              <button data-h="${reg(V.addEntrada)}" style="background:${V.addBg};color:#14100e;border:none;border-radius:8px;padding:8px 18px;font-size:12.5px;font-weight:600;cursor:${V.addCursor};transition:all .2s">Registrar</button>
+            </div>
+          </div>
+          <div style="position:relative;padding-left:26px">
+            <div style="position:absolute;left:7px;top:6px;bottom:6px;width:1px;background:linear-gradient(180deg,rgba(163,173,149,.5),rgba(163,173,149,.08))"></div>
+            ${d.entradas.map(e => `<div style="position:relative;padding-bottom:22px;animation:entryIn .4s ${e.delay} ease both">
+              <div style="position:absolute;left:-24px;top:5px;width:9px;height:9px;border-radius:99px;background:${e.dotCor};box-shadow:0 0 10px ${e.dotGlow};animation:dotPop .4s ${e.delay} cubic-bezier(.3,1.6,.5,1) both"></div>
+              <div style="font-size:11.5px;color:#6f675b">${esc(e.quando)}<span style="color:#8d8578"> · ${esc(e.autor)}</span></div>
+              <div style="font-size:13.5px;line-height:1.55;margin-top:3px;color:${e.textoCor};text-wrap:pretty">${esc(e.texto)}</div>
+              ${e.temLink ? `<a href="${esc(e.link)}" target="_blank" rel="noopener" style="font-size:12px;color:#a3ad95;text-decoration:none;border-bottom:1px dotted rgba(163,173,149,.5)">📎 documento</a>` : ''}
+            </div>`).join('')}
+          </div>
+        </div>
+      </div>`;
+    }
+
+    // ---------------- CRIAR ----------------
+    if (V.isCreate) {
+      const inp = 'width:100%;box-sizing:border-box;background:#14100e;border:1px solid rgba(236,228,218,.15);color:#ece4da;border-radius:9px;padding:11px 13px;font-size:14px;outline:none;transition:border-color .2s';
+      const lbl = 'font-size:11px;color:#6f675b;text-transform:uppercase;letter-spacing:.12em;margin-bottom:7px';
+      const lbl2 = 'font-size:11px;color:#6f675b;text-transform:uppercase;letter-spacing:.12em;margin-bottom:9px';
+      html += `<div style="animation:screenIn .35s ease both;max-width:560px;margin:0 auto;padding:24px 28px 60px">
+        <button data-h="${reg(V.goBoard)}" style="background:none;border:none;color:#8d8578;font-size:13px;cursor:pointer;padding:6px 0;display:flex;align-items:center;gap:6px;transition:color .2s" data-hover="color:#ece4da">← Voltar ao quadro</button>
+        <div style="background:#1d1713;border:1px solid rgba(236,228,218,.07);border-radius:16px;padding:30px;margin-top:14px">
+          <div style="font-size:21px;font-weight:600">Novo projeto</div>
+          <div style="font-size:13px;color:#8d8578;margin:4px 0 24px">Ao salvar, a primeira entrada do Registro é criada automaticamente.</div>
+          <div style="display:flex;flex-direction:column;gap:18px">
+            <div><div style="${lbl}">Nome do projeto</div>
+              <input data-fid="cNome" data-ch="${reg(V.setCNome)}" value="${esc(V.cNome)}" placeholder="ex.: Regularização — Casa Anchieta" style="${inp}" data-focus="border-color:rgba(163,173,149,.6)"></div>
+            <div><div style="${lbl}">Cliente</div>
+              <input data-fid="cCliente" data-ch="${reg(V.setCCliente)}" value="${esc(V.cCliente)}" placeholder="nome do cliente" style="${inp}" data-focus="border-color:rgba(163,173,149,.6)"></div>
+            <div><div style="${lbl2}">Fase inicial</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px">${V.cFaseChips.map(chip).join('')}</div></div>
+            <div><div style="${lbl2}">Responsável agora</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px">${V.cBolaChips.map(chip).join('')}</div></div>
+            <div><div style="${lbl}">Pasta no OneDrive</div>
+              <input data-fid="cLink" data-ch="${reg(V.setCLink)}" value="${esc(V.cLink)}" placeholder="https://onedrive…" style="${inp}" data-focus="border-color:rgba(163,173,149,.6)"></div>
+            <button data-h="${reg(V.criarProjeto)}" style="background:${V.criarBg};color:#14100e;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:600;cursor:${V.criarCursor};margin-top:6px;transition:all .2s">Criar projeto</button>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    // ---------------- MINHAS TAREFAS ----------------
+    if (V.isTasks) {
+      html += `<div style="animation:screenIn .35s ease both;max-width:820px;margin:0 auto;padding:24px 28px 60px">
+        <button data-h="${reg(V.goBoard)}" style="background:none;border:none;color:#8d8578;font-size:13px;cursor:pointer;padding:6px 0;display:flex;align-items:center;gap:6px;transition:color .2s" data-hover="color:#ece4da">← Voltar ao quadro</button>
+        <div style="font-size:23px;font-weight:600;margin:12px 0 4px">Tarefas atribuídas</div>
+        <div style="font-size:13px;color:#8d8578;margin-bottom:20px">Filtre por responsável para ver tudo que está com essa pessoa, com os prazos.</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+          ${V.tasksFilterChips.map(c => `<button data-h="${reg(c.set)}" style="background:${c.bg};border:1px solid ${c.bd};color:${c.cor};border-radius:99px;padding:7px 15px;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .2s">${esc(c.nome)} <span style="opacity:.6">${c.count}</span></button>`).join('')}
+        </div>
+        <label style="display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:#8d8578;cursor:pointer;margin-bottom:20px">
+          <input type="checkbox" data-ch="${reg(V.toggleIncluirFeitas)}" ${V.tasksIncluirFeitas ? 'checked' : ''} style="accent-color:#a3ad95;width:15px;height:15px">Mostrar concluídas
+        </label>
+        <div style="display:flex;flex-direction:column;gap:20px">
+          ${V.tasksGrupos.map(g => `<div>
+            <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px">
+              <span style="font-size:14px;font-weight:600;color:#ece4da">${esc(g.projeto)}</span>
+              <span style="font-size:11.5px;color:#6f675b">${esc(g.cliente)} · ${esc(g.fase)}</span>
+            </div>
+            <div style="background:#1d1713;border:1px solid rgba(236,228,218,.07);border-radius:12px;overflow:hidden">
+              ${g.tarefas.map(t => `<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid rgba(236,228,218,.05);animation:cardIn .4s ${t.delay} ease both">
+                <button data-h="${reg(t.toggle)}" style="flex:none;width:20px;height:20px;border-radius:6px;border:1.5px solid ${t.checkBd};background:${t.checkBg};color:#14100e;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s">${esc(t.check)}</button>
+                <div style="flex:1;min-width:0;font-size:13.5px;color:${t.textoCor};text-decoration:${t.deco};text-wrap:pretty">${esc(t.texto)}</div>
+                ${t.temResp ? `<span style="flex:none;font-size:11px;font-weight:600;color:${t.respCor}">${esc(t.resp)}</span>` : ''}
+                ${t.temPrazo ? `<span style="flex:none;font-size:11.5px;font-weight:${t.prazoPeso};color:${t.prazoCor};white-space:nowrap">${esc(t.prazoLabel)}</span>` : ''}
+              </div>`).join('')}
+            </div>
+          </div>`).join('')}
+          ${V.tasksVazio ? `<div style="border:1px dashed rgba(236,228,218,.12);border-radius:12px;padding:40px 20px;text-align:center;font-size:13px;color:#6f675b">Nenhuma tarefa ${esc(V.tasksVazioSuf)}.</div>` : ''}
+        </div>
+      </div>`;
+    }
+
+    // ---------------- CONFIGURAÇÕES ----------------
+    if (V.isSettings) {
+      html += `<div style="animation:screenIn .35s ease both;max-width:640px;margin:0 auto;padding:24px 28px 60px">
+        <button data-h="${reg(V.goBoard)}" style="background:none;border:none;color:#8d8578;font-size:13px;cursor:pointer;padding:6px 0;display:flex;align-items:center;gap:6px;transition:color .2s" data-hover="color:#ece4da">← Voltar ao quadro</button>
+        <div style="font-size:21px;font-weight:600;margin:14px 0 20px">Configurações</div>
+        <div style="background:#1d1713;border:1px solid rgba(236,228,218,.07);border-radius:16px;padding:24px 26px;margin-bottom:22px">
+          <div style="font-size:15px;font-weight:600;margin-bottom:4px">Fases do quadro</div>
+          <div style="font-size:12.5px;color:#8d8578;margin-bottom:16px">Renomeie, reordene ou adicione colunas.</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            ${V.faseRows.map((f, i) => `<div style="display:flex;align-items:center;gap:8px;background:#14100e;border:1px solid rgba(236,228,218,.08);border-radius:10px;padding:8px 10px">
+              <div style="display:flex;flex-direction:column;gap:1px">
+                <button data-h="${reg(f.subir)}" style="background:none;border:none;color:#6f675b;font-size:10px;cursor:pointer;padding:1px 4px;line-height:1" data-hover="color:#ece4da">▲</button>
+                <button data-h="${reg(f.descer)}" style="background:none;border:none;color:#6f675b;font-size:10px;cursor:pointer;padding:1px 4px;line-height:1" data-hover="color:#ece4da">▼</button>
+              </div>
+              <input data-fid="faseNome-${i}" data-ch="${reg(f.renomear)}" value="${esc(f.nome)}" style="flex:1;min-width:0;background:transparent;border:none;color:#ece4da;font-size:13.5px;font-weight:600;outline:none">
+              <span style="font-size:11.5px;color:#6f675b;white-space:nowrap">${esc(f.countLabel)}</span>
+              <button data-h="${reg(f.remover)}" title="${esc(f.removerTitulo)}" style="background:none;border:none;color:${f.removerCor};font-size:13px;cursor:${f.removerCursor};padding:2px 6px">✕</button>
+            </div>`).join('')}
+          </div>
+          ${V.avisoFase ? `<div style="margin-top:10px;font-size:12px;color:#d0965a">⚠ ${esc(V.avisoFaseMsg)}</div>` : ''}
+          <div style="display:flex;gap:8px;margin-top:14px">
+            <input data-fid="novaFase" data-ch="${reg(V.setNovaFase)}" value="${esc(V.novaFase)}" placeholder="nova fase…" style="flex:1;min-width:0;background:#14100e;border:1px solid rgba(236,228,218,.12);color:#ece4da;border-radius:9px;padding:9px 12px;font-size:13px;outline:none">
+            <button data-h="${reg(V.addFase)}" style="background:rgba(163,173,149,.15);color:#a3ad95;border:1px solid rgba(163,173,149,.3);border-radius:9px;padding:9px 16px;font-size:12.5px;font-weight:600;cursor:pointer" data-hover="background:rgba(163,173,149,.25)">Adicionar</button>
+          </div>
+        </div>
+        <div style="background:#1d1713;border:1px solid rgba(236,228,218,.07);border-radius:16px;padding:24px 26px">
+          <div style="font-size:15px;font-weight:600;margin-bottom:4px">Pessoas</div>
+          <div style="font-size:12.5px;color:#8d8578;margin-bottom:16px">Quem pode assumir a responsabilidade por um projeto.</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            ${V.pessoaRows.map((p, i) => `<div style="display:flex;align-items:center;gap:10px;background:#14100e;border:1px solid rgba(236,228,218,.08);border-radius:10px;padding:10px 12px">
+              <div style="width:30px;height:30px;border-radius:99px;background:${p.avatarBg};color:#14100e;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">${esc(p.inicial)}</div>
+              <input data-fid="pessoaNome-${i}" data-ch="${reg(p.renomear)}" value="${esc(p.nome)}" style="flex:1;min-width:0;background:transparent;border:none;color:#ece4da;font-size:13.5px;font-weight:600;outline:none">
+              <button data-h="${reg(p.remover)}" style="background:none;border:none;color:#6f675b;font-size:13px;cursor:pointer;padding:2px 6px" data-hover="color:#c26a4a">✕</button>
+            </div>`).join('')}
+          </div>
+          <div style="display:flex;gap:8px;margin-top:14px">
+            <input data-fid="novaPessoa" data-ch="${reg(V.setNovaPessoa)}" value="${esc(V.novaPessoa)}" placeholder="nome…" style="flex:1;min-width:0;background:#14100e;border:1px solid rgba(236,228,218,.12);color:#ece4da;border-radius:9px;padding:9px 12px;font-size:13px;outline:none">
+            <button data-h="${reg(V.addPessoa)}" style="background:rgba(163,173,149,.15);color:#a3ad95;border:1px solid rgba(163,173,149,.3);border-radius:9px;padding:9px 16px;font-size:12.5px;font-weight:600;cursor:pointer" data-hover="background:rgba(163,173,149,.25)">Adicionar</button>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    if (V.temToast) {
+      html += `<div style="position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:#252019;border:1px solid rgba(163,173,149,.35);color:#ece4da;border-radius:99px;padding:11px 22px;font-size:13px;box-shadow:0 12px 32px rgba(0,0,0,.5);animation:toastIn .35s cubic-bezier(.2,1.2,.4,1) both;z-index:50">${esc(V.toastMsg)}</div>`;
+    }
+
+    html += '</div>';
+    this.root.innerHTML = html;
+    this.bind();
+  }
+  bind() {
+    const H = this._H, root = this.root;
+    root.querySelectorAll('[data-h]').forEach(el => {
+      const fn = H[+el.getAttribute('data-h')];
+      el.addEventListener('click', e => { fn(e); });
+    });
+    root.querySelectorAll('[data-ch]').forEach(el => {
+      const fn = H[+el.getAttribute('data-ch')];
+      const evt = (el.tagName === 'SELECT' || el.type === 'date' || el.type === 'checkbox') ? 'change' : 'input';
+      el.addEventListener(evt, e => fn(e));
+    });
+    root.querySelectorAll('[data-hover]').forEach(el => {
+      const base = el.getAttribute('style') || '', hv = el.getAttribute('data-hover');
+      el.addEventListener('mouseenter', () => el.setAttribute('style', base + ';' + hv));
+      el.addEventListener('mouseleave', () => el.setAttribute('style', base));
+    });
+    root.querySelectorAll('[data-focus]').forEach(el => {
+      const base = el.getAttribute('style') || '', fv = el.getAttribute('data-focus');
+      el.addEventListener('focus', () => el.setAttribute('style', base + ';' + fv));
+      el.addEventListener('blur', () => el.setAttribute('style', base));
+    });
+  }
+
+  renderVals() {
+    const S = this.state, D = S.data, now = Date.now();
+    const SAGE='#a3ad95', AMBER='#d0965a', RUST='#c26a4a', MUTE='#6f675b', SUB='#8d8578';
+    const attn = this.props.diasAtencao ?? 3, crit = this.props.diasCritico ?? 8;
+    const dias = p => Math.floor((now - p.mud) / 864e5);
+    const fasesOrd = D.fases;
+    const lastFase = fasesOrd[fasesOrd.length - 1] && fasesOrd[fasesOrd.length - 1].id;
+    const urg = p => { if (p.pausa || p.bola === 'Cliente' || p.fase === lastFase) return 'none'; const d = dias(p); return d >= crit ? 'crit' : d >= attn ? 'attn' : 'ok'; };
+    const tempoTxt = p => { const d = dias(p); const base = d === 0 ? 'hoje' : d === 1 ? 'há 1 dia' : `há ${d} dias`; return p.pausa ? `${base} · pausado` : base; };
+    const tempoCor = p => ({ crit: RUST, attn: AMBER, ok: MUTE, none: MUTE })[urg(p)];
+    const PALETA = [{bg:'rgba(163,173,149,.14)',cor:SAGE},{bg:'rgba(210,150,90,.15)',cor:AMBER},{bg:'rgba(201,160,106,.14)',cor:'#c9a06a'},{bg:'rgba(176,168,190,.14)',cor:'#b0a8be'}];
+    const bolaVis = b => { const i = D.pessoas.findIndex(x => x.nome === b); return i >= 0 ? PALETA[i % PALETA.length] : { bg:'rgba(141,133,120,.14)', cor:SUB }; };
+    const responsaveis = [...D.pessoas.map(p => p.nome), 'Cliente'];
+    const tarefas = D.tarefas || [];
+    const toggleTarefa = id => this.commit(d => { const t = (d.tarefas || []).find(x => x.id === id); if (t) t.done = !t.done; });
+    const removerTarefa = id => this.commit(d => { d.tarefas = (d.tarefas || []).filter(x => x.id !== id); });
+    const diasAte = prazo => { const dl = new Date(prazo + 'T00:00:00'), h = new Date(); h.setHours(0,0,0,0); return Math.round((dl - h) / 864e5); };
+    const prazoInfo = t => {
+      if (!t.prazo) return { temPrazo:false };
+      const dl = new Date(t.prazo + 'T00:00:00'), hoje = new Date(); hoje.setHours(0,0,0,0);
+      const dd = Math.round((dl - hoje) / 864e5);
+      const fmt = dl.toLocaleDateString('pt-BR', { day:'2-digit', month:'short' });
+      let label = fmt, cor = SUB, peso = 400;
+      if (t.done) { cor = SUB; }
+      else if (dd < 0) { label = `${fmt} · atrasada`; cor = RUST; peso = 700; }
+      else if (dd === 0) { label = `${fmt} · hoje`; cor = AMBER; peso = 700; }
+      else if (dd === 1) { label = `${fmt} · amanhã`; cor = AMBER; peso = 600; }
+      else if (dd <= 3) { label = `${fmt} · em ${dd} dias`; cor = AMBER; peso = 600; }
+      return { temPrazo:true, prazoLabel:label, prazoCor:cor, prazoPeso:peso };
+    };
+    const tarefaView = (t, i) => ({
+      texto: t.texto, delay: (i * .05) + 's',
+      check: t.done ? '✓' : '', checkBg: t.done ? SAGE : 'transparent', checkBd: t.done ? SAGE : 'rgba(236,228,218,.25)',
+      textoCor: t.done ? MUTE : '#ece4da', deco: t.done ? 'line-through' : 'none',
+      temResp: !!t.resp, resp: t.resp, respCor: bolaVis(t.resp).cor,
+      ...prazoInfo(t),
+      toggle: () => toggleTarefa(t.id), remover: () => removerTarefa(t.id)
+    });
+    const ativos = D.projects.filter(p => !p.arq);
+    const vazios = ['Nada por aqui ainda.', 'Coluna limpa.', 'Tudo em dia por aqui.', 'Nenhum projeto nesta fase.', 'Silêncio bom.'];
+    const precisam = ativos.filter(p => urg(p) === 'crit' || urg(p) === 'attn').length;
+    const hora = new Date().getHours();
+    const saud = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
+    const greeting = (this.props.saudacao ?? true)
+      ? `${saud}, Bebela — ${precisam === 0 ? 'tudo sob controle.' : precisam === 1 ? '1 projeto precisa de você.' : precisam + ' projetos precisam de você.'}`
+      : 'Izabela Braga Arquitetura';
+    const columns = fasesOrd.map((f, fi) => {
+      const cards = ativos.filter(p => p.fase === f.id).sort((a, b) => a.mud - b.mud).map((p, i) => {
+        const u = urg(p), bv = bolaVis(p.bola), done = p.fase === lastFase;
+        const pt = tarefas.filter(t => t.pid === p.id && !t.done);
+        const atras = pt.filter(t => t.prazo && diasAte(t.prazo) < 0).length;
+        const hoje = pt.filter(t => t.prazo && diasAte(t.prazo) === 0).length;
+        return { nome: p.nome, cliente: p.cliente, pausado: p.pausa,
+          temTarefas: pt.length > 0, tarefasLabel: pt.length === 1 ? '1 tarefa pendente' : pt.length + ' tarefas pendentes',
+          temAtraso: atras > 0, atrasoLabel: atras + ' atrasada' + (atras > 1 ? 's' : ''),
+          temHoje: hoje > 0, hojeLabel: hoje + ' hoje',
+          bolaLabel: done ? '✓ Entregue' : '● ' + p.bola, bolaBg: bv.bg, bolaCor: bv.cor,
+          tempo: (u === 'crit' ? '⚠ ' : '') + tempoTxt(p), tempoCor: tempoCor(p), tempoPeso: u === 'none' || u === 'ok' ? 400 : 700,
+          border: u === 'crit' ? 'rgba(194,106,74,.45)' : 'rgba(236,228,218,.06)',
+          pulse: u === 'crit' ? ',glowPulse 3s 1s ease-in-out infinite' : '',
+          opacity: p.pausa || done ? .62 : 1,
+          delay: (fi * .06 + i * .08) + 's',
+          open: () => this.setState({ tela:'detail', sel:p.id, confArq:false, editLink:false, novoTexto:'', novoLink:'' }) };
+      });
+      return { nome: f.nome, count: cards.length, cards, vazia: cards.length === 0, vazioMsg: vazios[fi % vazios.length] };
+    });
+    const chipVis = on => on ? { bg:'rgba(163,173,149,.18)', bd:'rgba(163,173,149,.55)', cor:SAGE } : { bg:'transparent', bd:'rgba(236,228,218,.14)', cor:SUB };
+    let det = {};
+    const proj = D.projects.find(p => p.id === S.sel);
+    if (proj) {
+      const u = urg(proj);
+      det = { nome: proj.nome, cliente: proj.cliente, pausado: proj.pausa,
+        pausaLabel: proj.pausa ? '▶ Retomar' : '❚❚ Pausar',
+        archLabel: S.confArq ? 'Confirmar arquivamento?' : 'Arquivar', archBg: S.confArq ? 'rgba(194,106,74,.15)' : 'transparent',
+        tempoTexto: `Última movimentação: ${tempoTxt(proj)}`,
+        tempoCor: tempoCor(proj), tempoPeso: u === 'none' || u === 'ok' ? 400 : 700,
+        link: proj.link || '#', linkLabel: proj.link ? 'Abrir pasta do projeto ↗' : 'sem link — adicionar',
+        editandoLink: S.editLink, naoEditandoLink: !S.editLink, linkDraft: S.linkDraft,
+        setLinkDraft: e => this.setState({ linkDraft: e.target.value }),
+        editarLink: () => this.setState({ editLink: true, linkDraft: proj.link }),
+        salvarLink: () => { const v = S.linkDraft; this.commit(d => { d.projects.find(x => x.id === proj.id).link = v; }); this.setState({ editLink: false }); this.toast('Link da pasta atualizado'); },
+        togglePausa: () => { const vaiPausar = !proj.pausa; this.commit(d => { const p = d.projects.find(x => x.id === proj.id); p.pausa = vaiPausar; p.mud = Date.now(); this.log(d, proj.id, vaiPausar ? 'Projeto pausado' : 'Projeto retomado', 'Bebela'); }); this.toast(vaiPausar ? 'Projeto pausado — sem alarmes até retomar' : 'Projeto retomado ✨'); },
+        arquivar: () => { if (!S.confArq) { this.setState({ confArq: true }); setTimeout(() => this.setState({ confArq: false }), 3500); return; } this.commit(d => { d.projects.find(x => x.id === proj.id).arq = true; }); this.setState({ tela:'board', sel:null, confArq:false }); this.toast('Projeto arquivado — o histórico fica guardado'); },
+        faseChips: fasesOrd.map(f => ({ nome: f.nome, ...chipVis(f.id === proj.fase),
+          set: () => { if (f.id === proj.fase) return; const de = (fasesOrd.find(x => x.id === proj.fase) || {}).nome; this.commit(d => { const p = d.projects.find(x => x.id === proj.id); p.fase = f.id; p.mud = Date.now(); this.log(d, proj.id, `Fase alterada: ${de} → ${f.nome}`, 'Bebela'); }); this.toast(`Movido para ${f.nome}`); } })),
+        bolaChips: responsaveis.map(b => ({ nome: b, ...chipVis(b === proj.bola),
+          set: () => { if (b === proj.bola) return; const de = proj.bola; this.commit(d => { const p = d.projects.find(x => x.id === proj.id); p.bola = b; p.mud = Date.now(); this.log(d, proj.id, `Responsável alterado: ${de} → ${b}`, 'Bebela'); }); this.toast(`Agora com ${b}`); } })),
+        tarefas: tarefas.filter(t => t.pid === proj.id).sort((a, b) => (a.done - b.done) || ((a.prazo || '9') > (b.prazo || '9') ? 1 : -1)).map(tarefaView),
+        tarefasResumo: (() => { const ts = tarefas.filter(t => t.pid === proj.id); const feitas = ts.filter(t => t.done).length; return ts.length ? `— ${feitas}/${ts.length} concluídas` : ''; })(),
+        entradas: D.registros.filter(r => r.pid === proj.id).sort((a, b) => b.t - a.t).map((r, i) => {
+          const auto = /^(Projeto pausado|Projeto retomado|Fase alterada|Responsável alterado|Projeto criado)/.test(r.texto);
+          return { quando: new Date(r.t).toLocaleDateString('pt-BR', { day:'2-digit', month:'short', year:'numeric' }), autor: r.autor || '—',
+            texto: r.texto, textoCor: auto ? SUB : '#ece4da', temLink: !!r.link, link: r.link,
+            dotCor: auto ? 'rgba(141,133,120,.6)' : SAGE, dotGlow: auto ? 'transparent' : 'rgba(163,173,149,.4)', delay: Math.min(i * .07, .6) + 's' };
+        }) };
+    }
+    const podeAdd = S.novoTexto.trim().length > 0, podeCriar = S.cNome.trim() && S.cCliente.trim();
+    const podeAddTarefa = S.novaTarefa.trim().length > 0 && !!proj;
+    const filtro = S.tasksFiltro;
+    const tarefasFiltradas = tarefas.filter(t => t.resp === filtro && (S.tasksIncluirFeitas || !t.done));
+    const projComTarefa = ativos.filter(p => tarefasFiltradas.some(t => t.pid === p.id));
+    const tasksGrupos = projComTarefa.map(p => ({
+      projeto: p.nome, cliente: p.cliente, fase: (fasesOrd.find(f => f.id === p.fase) || {}).nome || '',
+      tarefas: tarefasFiltradas.filter(t => t.pid === p.id).sort((a, b) => (a.done - b.done) || ((a.prazo || '9') > (b.prazo || '9') ? 1 : -1)).map(tarefaView)
+    }));
+    return { isBoard: S.tela === 'board', isDetail: S.tela === 'detail' && !!proj, isCreate: S.tela === 'create', isSettings: S.tela === 'settings', isTasks: S.tela === 'tasks',
+      greeting, columns, det,
+      ...(() => { const ativosIds = new Set(ativos.map(p => p.id));
+        const pend = tarefas.filter(t => !t.done && t.prazo && ativosIds.has(t.pid));
+        const atr = pend.filter(t => diasAte(t.prazo) < 0).length, hj = pend.filter(t => diasAte(t.prazo) === 0).length;
+        if (!atr && !hj) return { prazoAviso: false };
+        const partes = []; if (atr) partes.push(`${atr} tarefa${atr>1?'s':''} atrasada${atr>1?'s':''}`); if (hj) partes.push(`${hj} vencendo hoje`);
+        return { prazoAviso: true,
+          prazoAvisoIcon: atr ? '⚠' : '⏳',
+          prazoAvisoMsg: partes.join(' e ') + ' no escritório.',
+          prazoAvisoBg: atr ? 'rgba(194,106,74,.1)' : 'rgba(210,150,90,.1)',
+          prazoAvisoBd: atr ? 'rgba(194,106,74,.35)' : 'rgba(210,150,90,.35)' }; })(),
+      goBoard: () => this.setState({ tela:'board', sel:null }),
+      goTasks: () => this.setState({ tela:'tasks' }),
+      novaTarefa: S.novaTarefa, setNovaTarefa: e => this.setState({ novaTarefa: e.target.value }),
+      novaTarefaResp: S.novaTarefaResp, setNovaTarefaResp: e => this.setState({ novaTarefaResp: e.target.value }),
+      novaTarefaPrazo: S.novaTarefaPrazo, setNovaTarefaPrazo: e => this.setState({ novaTarefaPrazo: e.target.value }),
+      addTarefaBg: podeAddTarefa ? SAGE : 'rgba(163,173,149,.25)', addTarefaCursor: podeAddTarefa ? 'pointer' : 'default',
+      addTarefa: () => { if (!podeAddTarefa) return; const { novaTarefa, novaTarefaResp, novaTarefaPrazo } = S; this.commit(d => { (d.tarefas = d.tarefas || []).push({ id: d.nextId++, pid: proj.id, texto: novaTarefa.trim(), resp: novaTarefaResp, prazo: novaTarefaPrazo, done: false }); }); this.setState({ novaTarefa:'', novaTarefaResp:'', novaTarefaPrazo:'' }); this.toast('Tarefa adicionada'); },
+      tasksFilterChips: responsaveis.map(b => ({ nome: b, ...chipVis(b === filtro), count: tarefas.filter(t => t.resp === b && !t.done).length, set: () => this.setState({ tasksFiltro: b }) })),
+      tasksIncluirFeitas: S.tasksIncluirFeitas, toggleIncluirFeitas: () => this.setState({ tasksIncluirFeitas: !S.tasksIncluirFeitas }),
+      tasksGrupos, tasksVazio: tasksGrupos.length === 0, tasksVazioSuf: S.tasksIncluirFeitas ? `atribuída a ${filtro}` : `pendente para ${filtro}`,
+      goCreate: () => this.setState({ tela:'create', cNome:'', cCliente:'', cFase: fasesOrd[0] ? fasesOrd[0].id : 0, cBola: responsaveis[0] || 'Cliente', cLink:'' }),
+      goSettings: () => this.setState({ tela:'settings', avisoFase:'' }),
+      novoTexto: S.novoTexto, setNovoTexto: e => this.setState({ novoTexto: e.target.value }),
+      novoLink: S.novoLink, setNovoLink: e => this.setState({ novoLink: e.target.value }),
+      novoAutor: S.novoAutor, setNovoAutor: e => this.setState({ novoAutor: e.target.value }),
+      pessoasOpts: D.pessoas.map(p => ({ nome: p.nome })),
+      addBg: podeAdd ? SAGE : 'rgba(163,173,149,.25)', addCursor: podeAdd ? 'pointer' : 'default',
+      addEntrada: () => { if (!podeAdd || !proj) return; const { novoTexto, novoLink, novoAutor } = S; this.commit(d => { this.log(d, proj.id, novoTexto.trim(), novoAutor, novoLink.trim()); }); this.setState({ novoTexto:'', novoLink:'' }); this.toast('Registrado ✓'); },
+      cNome: S.cNome, setCNome: e => this.setState({ cNome: e.target.value }),
+      cCliente: S.cCliente, setCCliente: e => this.setState({ cCliente: e.target.value }),
+      cLink: S.cLink, setCLink: e => this.setState({ cLink: e.target.value }),
+      cFaseChips: fasesOrd.map(f => ({ nome: f.nome, ...chipVis(f.id === S.cFase), set: () => this.setState({ cFase: f.id }) })),
+      cBolaChips: responsaveis.map(b => ({ nome: b, ...chipVis(b === S.cBola), set: () => this.setState({ cBola: b }) })),
+      criarBg: podeCriar ? SAGE : 'rgba(163,173,149,.25)', criarCursor: podeCriar ? 'pointer' : 'default',
+      criarProjeto: () => { if (!podeCriar) return; const { cNome, cCliente, cFase, cBola, cLink } = S; this.commit(d => { const id = d.nextId++; d.projects.push({ id, nome: cNome.trim(), cliente: cCliente.trim(), fase: cFase, bola: cBola, pausa: false, arq: false, link: cLink.trim(), mud: Date.now() }); this.log(d, id, 'Projeto criado', 'Bebela'); }); this.setState({ tela:'board' }); this.toast(`"${cNome.trim()}" criado ✨`); },
+      faseRows: fasesOrd.map((f, i) => { const n = ativos.filter(p => p.fase === f.id).length; return { nome: f.nome, countLabel: n === 1 ? '1 projeto' : n + ' projetos',
+        renomear: e => { const v = e.target.value; this.commit(d => { d.fases[i].nome = v; }); },
+        subir: () => { if (i === 0) return; this.commit(d => { const a = d.fases[i]; d.fases[i] = d.fases[i-1]; d.fases[i-1] = a; }); },
+        descer: () => { if (i === fasesOrd.length - 1) return; this.commit(d => { const a = d.fases[i]; d.fases[i] = d.fases[i+1]; d.fases[i+1] = a; }); },
+        removerCor: n > 0 ? '#3d362e' : MUTE, removerCursor: n > 0 ? 'not-allowed' : 'pointer', removerTitulo: n > 0 ? 'Há projetos nesta fase' : 'Remover fase',
+        remover: () => { if (n > 0) { this.setState({ avisoFase: `"${f.nome}" tem ${n} projeto(s) — mova-os antes de remover.` }); setTimeout(() => this.setState({ avisoFase: '' }), 4000); return; } this.commit(d => { d.fases.splice(i, 1); }); this.toast('Fase removida'); } }; }),
+      avisoFase: !!S.avisoFase, avisoFaseMsg: S.avisoFase,
+      novaFase: S.novaFase, setNovaFase: e => this.setState({ novaFase: e.target.value }),
+      addFase: () => { const v = S.novaFase.trim(); if (!v) return; this.commit(d => { d.fases.push({ id: d.nextId++, nome: v }); }); this.setState({ novaFase: '' }); this.toast(`Fase "${v}" adicionada`); },
+      pessoaRows: D.pessoas.map((p, i) => ({ nome: p.nome, inicial: (p.nome[0] || '?').toUpperCase(),
+        avatarBg: PALETA[i % PALETA.length].cor,
+        renomear: e => { const v = e.target.value, antigo = p.nome; this.commit(d => { d.pessoas[i].nome = v; d.projects.forEach(pr => { if (pr.bola === antigo) pr.bola = v; }); }); },
+        remover: () => { this.commit(d => { d.pessoas.splice(i, 1); d.projects.forEach(pr => { if (pr.bola === p.nome) pr.bola = 'Cliente'; }); }); this.toast('Pessoa removida'); } })),
+      novaPessoa: S.novaPessoa, setNovaPessoa: e => this.setState({ novaPessoa: e.target.value }),
+      addPessoa: () => { const v = S.novaPessoa.trim(); if (!v) return; this.commit(d => { d.pessoas.push({ id: d.nextId++, nome: v }); }); this.setState({ novaPessoa: '' }); this.toast(`${v} entrou no time`); },
+      temToast: !!S.toast, toastMsg: S.toast };
+  }
+}
+
+new Panel({ diasAtencao: 3, diasCritico: 8, saudacao: true }).mount(document.getElementById('app'));
+</script>
+</body>
+</html>

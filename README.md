@@ -35,6 +35,8 @@ Codinome de trabalho: **escritorio-iza** (renomeável).
 
 ## Artefatos
 
+- `app/painel-bebela/` — **Painel de gestão de projetos** (quadro da Bebela), app real e autossuficiente.
+  Implementação do protótipo do Claude Design. Abrir `index.html` no navegador. Ver `app/painel-bebela/README.md`.
 - `scripts/validar-get-pbh.mjs` — valida o GET no doc publicado + estruturação via Claude API
 
 ## Stack pretendida (provisória)
