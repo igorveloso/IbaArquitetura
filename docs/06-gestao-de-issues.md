@@ -44,9 +44,8 @@ bug (+ urgência: alta/média/baixa) → arruma → fecha a issue
 
 A urgência guia a ordem de ataque. `urgência: alta` = travou trabalho, resolver hoje.
 
-> **Nota sobre a urgência:** hoje a pessoa escolhe a urgência no formulário (fica escrito no corpo da
-> issue) e o Igor aplica a label `urgência: X` na triagem. Dá pra automatizar isso depois com uma
-> Action que lê a resposta e coloca a label sozinha — ver "Próximos passos".
+> **Nota sobre a urgência:** a label `urgência: X` é aplicada **automaticamente** pela Action de triagem
+> (`.github/workflows/triagem-issues.yml`), que lê a resposta do formulário. Ninguém precisa marcar na mão.
 
 ### As labels
 Definidas em `.github/labels.json` e criadas/atualizadas pelo workflow **Sincronizar labels**
@@ -120,10 +119,21 @@ pronto (labels + formato), então o botão só precisa seguir este formato.
 
 ---
 
+## Automações já montadas (`.github/workflows/`)
+
+- **`sync-labels.yml`** — cria/atualiza as labels a partir de `labels.json`.
+- **`triagem-issues.yml`** — três automações leves:
+  1. **Urgência automática:** lê a resposta do formulário de bug e aplica `urgência: alta/média/baixa`.
+  2. **Acuse de recebimento:** comenta na issue nova avisando que chegou (bom pra quem não vive no GitHub).
+  3. **Fechar ao descartar:** ao marcar `descartado`, fecha a issue com um comentário (mantém o histórico).
+
 ## Próximos passos (opcionais, quando fizer sentido)
 
-- [ ] Criar o board de Projects e ligar o auto-add (passo manual acima).
-- [ ] Action de triagem: ler a urgência do formulário e aplicar a label `urgência: X` sozinha.
+- [ ] Ligar o **auto-add ao Project** (Settings do Project → Workflows → "Auto-add to project"). Zero
+      código; toda issue nova cai no quadro sozinha.
+- [ ] **Aviso de urgência alta** — quando `urgência: alta` for aplicada, disparar aviso (menção, e-mail
+      ou, no futuro, WhatsApp). Fácil de montar quando definirmos o canal.
+- [ ] **Limpeza de ideias paradas** — ideia sem atividade há X dias ganha um comentário/aviso pra revisão.
 - [ ] Quando a plataforma existir: implementar a função serverless do contrato acima.
 - [ ] (Se o atrito de conta no GitHub incomodar antes da plataforma) avaliar uma conta compartilhada do
       escritório ou um Google Form → issue como ponte temporária.
