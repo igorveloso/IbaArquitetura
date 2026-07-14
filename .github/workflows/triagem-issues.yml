@@ -17,8 +17,12 @@ jobs:
       (github.event.action == 'opened' || github.event.action == 'edited') &&
       contains(github.event.issue.labels.*.name, 'bug')
     runs-on: ubuntu-latest
+    outputs:
+      # 'true' quando ACABOU de aplicar urgência: alta — dispara o e-mail no job abaixo.
+      alta_aplicada: ${{ steps.set.outputs.alta_aplicada }}
     steps:
-      - uses: actions/github-script@v7
+      - id: set
+        uses: actions/github-script@v7
         with:
           script: |
             const body = (context.payload.issue.body || '').toLowerCase();
@@ -44,7 +48,38 @@ jobs:
                 ...context.repo, issue_number: context.issue.number, labels: [achado.label],
               });
               core.info('Aplicada: ' + achado.label);
+              // Só sinaliza e-mail quando é a primeira vez que vira 'alta'.
+              if (achado.label === 'urgência: alta') core.setOutput('alta_aplicada', 'true');
             }
+
+  # 1b) E-mail de alerta quando a triagem automática marcou um bug como urgência: alta.
+  #     (O caminho manual — alguém clica na label — é coberto por alerta-urgencia-alta.yml.)
+  alerta_alta_auto:
+    needs: urgencia
+    if: needs.urgencia.outputs.alta_aplicada == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enviar e-mail de urgência alta
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          from: Alerta Escritório <${{ secrets.MAIL_USERNAME }}>
+          to: igormoreiraveloso@gmail.com
+          subject: "🔴 Bug URGENTE: ${{ github.event.issue.title }}"
+          body: |
+            Um bug de urgência ALTA acabou de entrar.
+
+            ${{ github.event.issue.title }}
+            ${{ github.event.issue.html_url }}
+
+            Reportado por: ${{ github.event.issue.user.login }}
+
+            ----------------------------------------
+            ${{ github.event.issue.body }}
 
   # 2) Acuse de recebimento: comenta na issue nova pra quem reportou saber que chegou.
   #    Importante pro pessoal do escritório, que não vive no GitHub.

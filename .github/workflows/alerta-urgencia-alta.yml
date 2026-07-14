@@ -1,0 +1,42 @@
+name: Alerta de urgência alta (e-mail)
+
+# Cobre o caminho MANUAL: quando alguém aplica a label "urgência: alta" na mão
+# (ex.: escalar um bug que estava como média). O caminho automático — a triagem
+# detectar "alta" no formulário — é coberto por triagem-issues.yml.
+#
+# Por que dois lugares? Quando a Action de triagem aplica a label sozinha (com o
+# token padrão), o GitHub NÃO dispara outro workflow. Então este aqui só roda em
+# aplicação manual — sem risco de e-mail duplicado.
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: read
+
+jobs:
+  email:
+    if: "github.event.label.name == 'urgência: alta'"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enviar e-mail de urgência alta
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          from: Alerta Escritório <${{ secrets.MAIL_USERNAME }}>
+          to: igormoreiraveloso@gmail.com
+          subject: "🔴 Bug URGENTE: ${{ github.event.issue.title }}"
+          body: |
+            Um bug foi marcado como urgência ALTA.
+
+            ${{ github.event.issue.title }}
+            ${{ github.event.issue.html_url }}
+
+            Reportado por: ${{ github.event.issue.user.login }}
+
+            ----------------------------------------
+            ${{ github.event.issue.body }}

@@ -122,18 +122,37 @@ pronto (labels + formato), então o botão só precisa seguir este formato.
 ## Automações já montadas (`.github/workflows/`)
 
 - **`sync-labels.yml`** — cria/atualiza as labels a partir de `labels.json`.
-- **`triagem-issues.yml`** — três automações leves:
+- **`triagem-issues.yml`** — automações leves (só `actions/github-script`, oficial):
   1. **Urgência automática:** lê a resposta do formulário de bug e aplica `urgência: alta/média/baixa`.
   2. **Acuse de recebimento:** comenta na issue nova avisando que chegou (bom pra quem não vive no GitHub).
   3. **Fechar ao descartar:** ao marcar `descartado`, fecha a issue com um comentário (mantém o histórico).
+  4. **E-mail no caminho automático:** se a triagem marcar um bug como `urgência: alta`, dispara e-mail.
+- **`triagem-claude.yml`** — o **Claude lê a issue + o repositório** e comenta uma primeira triagem
+  técnica (provável causa e onde mexer, no caso de bug; viabilidade e esforço, no caso de ideia).
+  Não altera labels nem fecha nada — só comenta. Roda na abertura da issue.
+- **`alerta-urgencia-alta.yml`** — cobre o caminho **manual**: quando alguém aplica `urgência: alta`
+  na mão, dispara o e-mail de alerta. (O caminho automático já é coberto pelo `triagem-issues.yml`;
+  os dois nunca duplicam o e-mail — ver comentário no arquivo.)
+
+### Secrets necessários (Settings → Secrets and variables → Actions)
+
+| Secret | Pra quê | Como obter |
+|--------|---------|-----------|
+| `ANTHROPIC_API_KEY` | Triagem com Claude | Mesma chave da Claude API já usada no projeto |
+| `MAIL_USERNAME` | Alerta por e-mail (remetente) | O e-mail do Gmail que vai enviar (ex.: o do escritório) |
+| `MAIL_PASSWORD` | Alerta por e-mail (senha SMTP) | **Senha de app** do Gmail (não a senha normal) — myaccount.google.com → Segurança → Senhas de app |
+
+> O e-mail usa SMTP do Gmail (`smtp.gmail.com`) via a action `dawidd6/action-send-mail`. Destinatário
+> hoje: `igormoreiraveloso@gmail.com` (dá pra mudar/adicionar no `to:` dos workflows). Sem os secrets
+> `MAIL_*`, o passo de e-mail simplesmente falha — o resto das automações continua funcionando.
 
 ## Próximos passos (opcionais, quando fizer sentido)
 
 - [ ] Ligar o **auto-add ao Project** (Settings do Project → Workflows → "Auto-add to project"). Zero
       código; toda issue nova cai no quadro sozinha.
-- [ ] **Aviso de urgência alta** — quando `urgência: alta` for aplicada, disparar aviso (menção, e-mail
-      ou, no futuro, WhatsApp). Fácil de montar quando definirmos o canal.
-- [ ] **Limpeza de ideias paradas** — ideia sem atividade há X dias ganha um comentário/aviso pra revisão.
+- [ ] **Limpeza de ideias paradas** — ideia sem atividade há X dias ganha um comentário/aviso pra revisão
+      (a definir o prazo).
+- [ ] **Aviso de urgência alta por WhatsApp** — hoje é por e-mail; dá pra somar um canal quando fizer sentido.
 - [ ] Quando a plataforma existir: implementar a função serverless do contrato acima.
 - [ ] (Se o atrito de conta no GitHub incomodar antes da plataforma) avaliar uma conta compartilhada do
       escritório ou um Google Form → issue como ponte temporária.

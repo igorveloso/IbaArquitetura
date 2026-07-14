@@ -1,0 +1,53 @@
+name: Triagem com Claude
+
+# Quando uma issue nova é aberta, o Claude lê a issue + o repositório (docs/ e código)
+# e posta UM comentário com uma primeira triagem técnica — provável causa e onde mexer
+# (bug) ou viabilidade e esforço (funcionalidade). Não altera labels nem fecha nada.
+#
+# Requer o secret ANTHROPIC_API_KEY (Settings → Secrets and variables → Actions).
+# A inclusão da issue no board é feita pelo "Auto-add to project" do próprio Project.
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  triagem:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Você é o assistente de triagem do repositório do escritório de arquitetura
+            da Bebela (Izabela Braga Arquitetura). Toda a documentação está em português
+            e vive na pasta docs/. Uma issue nova acabou de ser aberta.
+
+            Título: ${{ github.event.issue.title }}
+            Número: ${{ github.event.issue.number }}
+
+            Faça:
+            1. Leia o corpo da issue e o repositório — principalmente a pasta docs/ e
+               qualquer código — para entender o contexto e a arquitetura pretendida.
+            2. Se for um BUG (tem a label "bug"): aponte a provável causa e os arquivos
+               ou áreas do código mais prováveis de investigar. Se ainda não existe código
+               relacionado (o projeto está em fase de documentação), diga isso claramente
+               e o que precisaria existir para reproduzir/corrigir.
+            3. Se for uma FUNCIONALIDADE/ideia (tem a label "funcionalidade"): avalie a
+               viabilidade com base no que existe hoje (veja docs/), estime o esforço
+               (baixo / médio / alto) e diga se parece duplicar algo já registrado.
+            4. Poste UM único comentário em português do Brasil, objetivo e curto,
+               começando com o cabeçalho "🤖 Triagem automática (Claude)".
+               NÃO altere labels, NÃO feche a issue — apenas comente.
+
+            Comando para comentar:
+            gh issue comment ${{ github.event.issue.number }} --body "SEU_TEXTO"
+          claude_args: |
+            --allowedTools "Bash(gh:*),Read,Grep,Glob"
+            --model claude-sonnet-5
+            --max-turns 15
