@@ -24,6 +24,16 @@ Registro cronológico das decisões, para não se perder entre conversas.
   apontando para os `docs/`), `.gitignore` (protege `.env`), `.env.example` e `package.json` mínimo.
   Ao abrir o repo no Claude Code, o `CLAUDE.md` é lido automaticamente no início da sessão.
 
+## 2026-07-14
+
+- **D9 — Gestão de demandas via GitHub Issues, em duas esteiras.** Funcionalidades (esteira `ideia →
+  validado → constrói`, uso Igor + Bebela) e bugs (esteira `bug + urgência`, uso de todo o escritório),
+  cada uma com seu formulário em `.github/ISSUE_TEMPLATE/`. Labels versionadas em `.github/labels.json`
+  e sincronizadas por Action. Toda demanda vira issue — registro único, sem planilha paralela. O quadro
+  visual (GitHub Projects) é passo manual único. Reporte de bug será feito **de dentro da plataforma**
+  (futura) via função serverless → GitHub API; o contrato desse fluxo está em
+  [`06-gestao-de-issues.md`](06-gestao-de-issues.md). O formulário web fica como porta de emergência.
+
 ## Validações registradas
 
 - **GET no doc da PBH: CONFIRMADO ao vivo** (10/07/2026). Ver [`03-achados-tecnicos.md`](03-achados-tecnicos.md).

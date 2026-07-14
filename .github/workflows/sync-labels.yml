@@ -1,0 +1,31 @@
+name: Sincronizar labels
+
+# Cria/atualiza as labels do repositório a partir de .github/labels.json.
+# Rode manualmente pela aba Actions ("Run workflow") ou deixe rodar sozinho
+# sempre que o labels.json mudar na main.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [".github/labels.json"]
+
+permissions:
+  issues: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Criar/atualizar labels
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          jq -c '.[]' .github/labels.json | while read -r label; do
+            name=$(echo "$label" | jq -r '.name')
+            color=$(echo "$label" | jq -r '.color')
+            desc=$(echo "$label" | jq -r '.description')
+            echo "→ $name"
+            gh label create "$name" --color "$color" --description "$desc" --force
+          done
