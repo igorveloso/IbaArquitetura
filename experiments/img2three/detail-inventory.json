@@ -1,0 +1,132 @@
+{
+  "sourceImage": "C:\\Users\\Igor Moreira\\OneDrive\\Documentos\\Pessoal\\Projetos\\Cursor Projects\\IbaArquitetura\\img2three-teste\\refs\\predioteste.png",
+  "zonesDir": "C:\\Users\\Igor Moreira\\OneDrive\\Documentos\\Pessoal\\Projetos\\Cursor Projects\\IbaArquitetura\\img2three-teste\\zones",
+  "detailInventory": {
+    "scanMethod": "component-zones",
+    "targetMinDetails": 10,
+    "details": [
+      {
+        "id": "torre-curtain-wall-grid",
+        "kind": "repetition-pattern",
+        "description": "Full-height stair/elevator tower clad in a blue-grey tinted glass curtain wall; regular mullion grid of roughly 3 columns by ~14 rows of panels, flat reflective glazing with dark mullion lines.",
+        "region": { "x": 0.35, "y": 0.02, "width": 0.1, "height": 0.82, "units": "normalized" },
+        "scale": "macro",
+        "affects": "geometry+material",
+        "mapsTo": { "type": "repetitionSystem", "ref": "grade-vidro-torre" },
+        "evidenceRef": "zones\\torre-vidro.png",
+        "confidence": 0.85
+      },
+      {
+        "id": "torre-pilastras-claras",
+        "kind": "contour",
+        "description": "Light cream/white render pilasters framing both vertical edges of the glass tower, giving it a recessed ribbon look; slightly proud of the glass plane.",
+        "region": { "x": 0.35, "y": 0.02, "width": 0.1, "height": 0.82, "units": "normalized" },
+        "scale": "macro",
+        "affects": "geometry+material",
+        "mapsTo": { "type": "component", "ref": "torre-escada" },
+        "evidenceRef": "zones\\torre-vidro.png",
+        "confidence": 0.8
+      },
+      {
+        "id": "fachada-frisos-horizontais",
+        "kind": "linework",
+        "description": "Warm light-grey render facade with a shallow horizontal reveal line marking each floor slab (~5 floors), subtle shadow groove between bands.",
+        "region": { "x": 0.44, "y": 0.13, "width": 0.19, "height": 0.62, "units": "normalized" },
+        "scale": "meso",
+        "affects": "geometry+material",
+        "mapsTo": { "type": "component", "ref": "bloco-residencial" },
+        "evidenceRef": "zones\\fachada-principal.png",
+        "confidence": 0.85
+      },
+      {
+        "id": "fachada-janelas-esquadria-escura",
+        "kind": "repetition-pattern",
+        "description": "Repeated windows with dark aluminium frames, casement type: a wider glazed pane plus a narrow fixed side pane with a vertical mullion; ~2 windows per floor across the visible facade.",
+        "region": { "x": 0.44, "y": 0.13, "width": 0.19, "height": 0.62, "units": "normalized" },
+        "scale": "meso",
+        "affects": "geometry+material",
+        "mapsTo": { "type": "repetitionSystem", "ref": "janelas-fachada" },
+        "evidenceRef": "zones\\fachada-principal.png",
+        "confidence": 0.8
+      },
+      {
+        "id": "ripado-madeira-vertical",
+        "kind": "material-zone",
+        "description": "Vertical strip of warm wood-slat cladding running through the middle floors, aligned with one window column; thin horizontal reveals between slats, warm honey-brown tone contrasting the grey render.",
+        "region": { "x": 0.45, "y": 0.22, "width": 0.05, "height": 0.52, "units": "normalized" },
+        "scale": "meso",
+        "affects": "material",
+        "mapsTo": { "type": "material", "ref": "ripado-madeira" },
+        "evidenceRef": "zones\\ripado-madeira.png",
+        "confidence": 0.85
+      },
+      {
+        "id": "coberturas-atico-recuado",
+        "kind": "contour",
+        "description": "Stepped rooftop volumes: a setback penthouse/machine-room box and a lower parapet cap in grey render, breaking the flat roofline.",
+        "region": { "x": 0.44, "y": 0.02, "width": 0.19, "height": 0.16, "units": "normalized" },
+        "scale": "macro",
+        "affects": "geometry",
+        "mapsTo": { "type": "component", "ref": "coberturas" },
+        "evidenceRef": "zones\\coberturas.png",
+        "confidence": 0.7
+      },
+      {
+        "id": "guarita-porta-vidro-correr",
+        "kind": "glazing",
+        "description": "Ground-level gatehouse with large aluminium-framed sliding glass doors (2-3 panes), greenery visible behind the glass; low modernist box.",
+        "region": { "x": 0.29, "y": 0.77, "width": 0.15, "height": 0.21, "units": "normalized" },
+        "scale": "meso",
+        "affects": "geometry+material",
+        "mapsTo": { "type": "component", "ref": "guarita" },
+        "evidenceRef": "zones\\guarita-entrada.png",
+        "confidence": 0.75
+      },
+      {
+        "id": "guarita-revestimento-pedra",
+        "kind": "material-zone",
+        "description": "Light travertine/limestone cladding framing the gatehouse glazing; matte, warm off-white with faint horizontal veining.",
+        "region": { "x": 0.29, "y": 0.77, "width": 0.15, "height": 0.21, "units": "normalized" },
+        "scale": "meso",
+        "affects": "material",
+        "mapsTo": { "type": "material", "ref": "pedra-travertino" },
+        "evidenceRef": "zones\\guarita-entrada.png",
+        "confidence": 0.7
+      },
+      {
+        "id": "portao-metal-escuro",
+        "kind": "material-zone",
+        "description": "Dark near-black metal entrance gate/fence with fine slat texture, matte finish, framed by light render posts.",
+        "region": { "x": 0.23, "y": 0.8, "width": 0.1, "height": 0.18, "units": "normalized" },
+        "scale": "meso",
+        "affects": "geometry+material",
+        "mapsTo": { "type": "component", "ref": "portao-grade" },
+        "evidenceRef": "zones\\portao-grade.png",
+        "confidence": 0.8
+      },
+      {
+        "id": "muros-divisa-e-volumes-servico",
+        "kind": "contour",
+        "description": "Light white/grey rendered boundary walls running back along the lot, with boxy service/utility volumes stepping down behind the main block.",
+        "region": { "x": 0.55, "y": 0.58, "width": 0.32, "height": 0.28, "units": "normalized" },
+        "scale": "macro",
+        "affects": "geometry",
+        "mapsTo": { "type": "component", "ref": "muros-divisa" },
+        "evidenceRef": "zones\\muros-divisa.png",
+        "confidence": 0.65
+      },
+      {
+        "id": "vidro-azulado-reflexo",
+        "kind": "gloss",
+        "description": "All glazing (curtain wall + windows) is blue-grey tinted, low-roughness and reflective, reading darker than the render; slight vertical value gradient from sky reflection.",
+        "region": { "x": 0.35, "y": 0.05, "width": 0.1, "height": 0.75, "units": "normalized" },
+        "scale": "micro",
+        "affects": "material",
+        "mapsTo": { "type": "material", "ref": "vidro-azulado" },
+        "evidenceRef": "zones\\torre-vidro.png",
+        "confidence": 0.85
+      }
+    ]
+  },
+  "authoringInstruction": "Filled from direct inspection of zone crops. paisagismo zone dropped: out of scope (user chose predio + muro/portao, no landscaping). Each detail maps to an intended component/repetitionSystem/material id to be created with matching ids in the sculpt spec."
+}

@@ -1,0 +1,222 @@
+{
+  "targetName": "Edificio Residencial",
+  "sourceImage": "C:/Users/Igor Moreira/OneDrive/Documentos/Pessoal/Projetos/Cursor Projects/IbaArquitetura/img2three-teste/refs/predioteste.jpeg",
+  "preSpecAssessment": {
+    "objectClass": {
+      "primaryType": "architectural-building",
+      "primaryDomain": "object",
+      "formLanguage": ["hard-surface", "rectilinear", "modernist", "stacked-slabs"],
+      "structureKind": ["multi-storey", "curtain-wall-tower", "boundary-walls"],
+      "motionPotential": ["static", "sliding-glass-door", "openable-gate"],
+      "materialFamilies": ["render", "tinted-glass", "wood-slat", "dark-aluminium", "travertine", "dark-metal"],
+      "notes": "Residential apartment building, SketchUp-style render, 3/4 perspective showing front + right side. Two macro masses: a full-height glass stair tower and a ~5-storey render block, plus rooftop volumes, a ground gatehouse, a dark metal gate and light boundary walls. Back and left faces hidden -> mirror visible faces."
+    },
+    "complexity": {
+      "tier": "complex",
+      "scores": {
+        "silhouetteComplexity": 0.5,
+        "componentCount": 0.7,
+        "hierarchyDepth": 0.6,
+        "repetitionDensity": 0.8,
+        "materialLayerCount": 0.7,
+        "localDetailDensity": 0.6,
+        "occlusionRisk": 0.7,
+        "actionReadinessNeed": 0.3
+      },
+      "estimatedCounts": {
+        "macroComponents": 6,
+        "mesoComponents": 14,
+        "microFeatureGroups": 6,
+        "materialLayers": 6,
+        "repetitionSystems": 3
+      },
+      "reasoning": [
+        "Six macro masses: glass stair tower, main render block, rooftop volumes, gatehouse, gate/fence, boundary walls.",
+        "High repetition density: curtain-wall grid (~3x14), per-floor reveal bands (~5), repeated dark-frame windows (~2/floor), vertical wood-slat cladding -> 3 repetition systems.",
+        "Six material layers: grey render, blue tinted glass, warm wood slats, dark aluminium frames, travertine, dark matte metal.",
+        "Occlusion risk high: only front and right faces visible; back and left inferred by mirroring.",
+        "Low action-readiness need (hero render), but gate + sliding door are natural openable sockets."
+      ]
+    },
+    "specDepthDecision": {
+      "requiredDepth": "complex",
+      "minimumComponentLevels": [
+        "macro",
+        "meso",
+        "micro"
+      ],
+      "needsRepetitionSystems": true,
+      "needsMaterialLocalOverrides": true,
+      "needsMultipleReviewViews": true,
+      "needsActionReadyHierarchy": true,
+      "rationale": "Choose simple/moderate/complex/ultra-complex from observed structure, not from a hardcoded domain."
+    },
+    "unknownsToResolveBeforeImplementation": [
+      "Back and left facades are not visible -> mirror the front/right; state as approximation.",
+      "Exact floor count (5 assumed) and floor height not dimensioned in the image.",
+      "Gatehouse depth and lot depth behind the front plane are inferred.",
+      "Whether the wood-slat strip is balcony-deep or flush cladding."
+    ],
+    "detailInventory": {
+      "scanMethod": "component-zones",
+      "targetMinDetails": 10,
+      "note": "Filled from zone crops; full inventory in detail-inventory.json. paisagismo dropped (out of scope).",
+      "details": [
+        { "id": "torre-curtain-wall-grid", "kind": "repetition-pattern", "description": "Glass stair tower, ~3x14 mullion grid, blue-grey reflective glazing.", "scale": "macro", "affects": "geometry+material", "mapsTo": { "type": "repetitionSystem", "ref": "grade-vidro-torre" }, "confidence": 0.85 },
+        { "id": "torre-pilastras-claras", "kind": "contour", "description": "Cream render pilasters framing both edges of the glass tower.", "scale": "macro", "affects": "geometry+material", "mapsTo": { "type": "component", "ref": "torre-escada" }, "confidence": 0.8 },
+        { "id": "fachada-frisos-horizontais", "kind": "linework", "description": "Per-floor horizontal reveal grooves on the render block (~5 floors).", "scale": "meso", "affects": "geometry+material", "mapsTo": { "type": "component", "ref": "bloco-residencial" }, "confidence": 0.85 },
+        { "id": "fachada-janelas-esquadria-escura", "kind": "repetition-pattern", "description": "Dark-frame casement windows with narrow fixed side pane, ~2/floor.", "scale": "meso", "affects": "geometry+material", "mapsTo": { "type": "repetitionSystem", "ref": "janelas-fachada" }, "confidence": 0.8 },
+        { "id": "ripado-madeira-vertical", "kind": "material-zone", "description": "Vertical warm wood-slat cladding strip through the middle floors.", "scale": "meso", "affects": "material", "mapsTo": { "type": "material", "ref": "ripado-madeira" }, "confidence": 0.85 },
+        { "id": "coberturas-atico-recuado", "kind": "contour", "description": "Setback penthouse/machine box + parapet caps on the roof.", "scale": "macro", "affects": "geometry", "mapsTo": { "type": "component", "ref": "coberturas" }, "confidence": 0.7 },
+        { "id": "guarita-porta-vidro-correr", "kind": "glazing", "description": "Gatehouse with aluminium-framed sliding glass doors.", "scale": "meso", "affects": "geometry+material", "mapsTo": { "type": "component", "ref": "guarita" }, "confidence": 0.75 },
+        { "id": "guarita-revestimento-pedra", "kind": "material-zone", "description": "Travertine cladding framing the gatehouse glazing.", "scale": "meso", "affects": "material", "mapsTo": { "type": "material", "ref": "pedra-travertino" }, "confidence": 0.7 },
+        { "id": "portao-metal-escuro", "kind": "material-zone", "description": "Dark matte metal entrance gate with fine slat texture.", "scale": "meso", "affects": "geometry+material", "mapsTo": { "type": "component", "ref": "portao-grade" }, "confidence": 0.8 },
+        { "id": "muros-divisa-e-volumes-servico", "kind": "contour", "description": "Light rendered boundary walls + boxy service volumes behind.", "scale": "macro", "affects": "geometry", "mapsTo": { "type": "component", "ref": "muros-divisa" }, "confidence": 0.65 },
+        { "id": "vidro-azulado-reflexo", "kind": "gloss", "description": "Blue-grey tinted, low-roughness reflective glazing everywhere.", "scale": "micro", "affects": "material", "mapsTo": { "type": "material", "ref": "vidro-azulado" }, "confidence": 0.85 }
+      ]
+    },
+    "anatomy": {
+      "applies": false,
+      "styleHeads": 0.0,
+      "proportions": {
+        "headUnit": 0.0,
+        "torso": 0.0,
+        "legs": 0.0,
+        "shoulderWidth": 0.0,
+        "hipWidth": 0.0
+      },
+      "pose": {
+        "type": "unassessed",
+        "jointAngles": {}
+      },
+      "faceLandmarks": {
+        "eyeLine": 0.0,
+        "eyeSpacing": 0.0,
+        "noseBase": 0.0,
+        "mouthLine": 0.0,
+        "hairline": 0.0
+      },
+      "features": [],
+      "confidence": 0.0,
+      "note": "Only meaningful when objectClass.primaryDomain is character or hybrid. Set applies=true and fill from forge/stage1_intake/extract_landmarks.py. See grimoire/character/reconstruction.md and grimoire/character/likeness_maximization.md."
+    },
+    "sourceImage": "C:/Users/Igor Moreira/OneDrive/Documentos/Pessoal/Projetos/Cursor Projects/IbaArquitetura/img2three-teste/refs/predioteste.jpeg"
+  },
+  "qualityContract": {
+    "qualityBar": "complex",
+    "definitionOfDone": [
+      "The rendered model matches the reference silhouette, primary proportions, visible component hierarchy, material response, and most recognizable local features for the selected fidelity tier."
+    ],
+    "minimumSpecDepth": {
+      "macroComponents": 3,
+      "mesoComponents": 8,
+      "microFeatureGroups": 5,
+      "materialLayers": 3,
+      "repetitionSystems": 1,
+      "reviewViewpoints": 4
+    },
+    "featureGroups": [
+      {
+        "id": "overall-silhouette",
+        "name": "Overall silhouette and proportions",
+        "required": true,
+        "qualityCriteria": [
+          "Bounding shape, dominant curves, negative spaces, and scale relationships are explicitly described."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model reads as a generic placeholder instead of the reference object",
+          "major proportions are guessed without evidence"
+        ]
+      },
+      {
+        "id": "primary-structure",
+        "name": "Primary structure and hierarchy",
+        "required": true,
+        "qualityCriteria": [
+          "Major parts, joints, seams, contact points, and parent-child relationships are named before code generation."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "large visible parts are merged into one mesh",
+          "component hierarchy is too shallow for the observed complexity"
+        ]
+      },
+      {
+        "id": "attachment-joint-correctness",
+        "name": "Attachment and joint correctness",
+        "required": true,
+        "qualityCriteria": [
+          "Every visible child appendage, branch, limb, handle, connector, tube, cable, horn, wing, leg, or hinged part has an attachment contract with parent socket, localStart/localEnd, contact type, embed/overlap, and gap tolerance."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "child part root floats away from the parent",
+          "branch/limb/tube is centered in space instead of pivoting from its root",
+          "parent-child transform mixes world and local coordinates"
+        ]
+      },
+      {
+        "id": "surface-material-response",
+        "name": "Surface material response",
+        "required": true,
+        "qualityCriteria": [
+          "Albedo zones, roughness, normal/bump/displacement intent, cavity dirt, edge wear, and local overrides are specified where visible.",
+          "Important materials define independent albedo, roughness, height/normal, and AO responses instead of reusing one texture for unrelated PBR channels.",
+          "Surface response is decomposed into macro, meso, and micro frequency bands with scale and amplitude tied to object scale."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "surface looks like flat plastic",
+          "local material variation is missing or not tied to image evidence"
+        ]
+      },
+      {
+        "id": "reference-lookdev",
+        "name": "Reference color, material, and lighting response",
+        "required": true,
+        "qualityCriteria": [
+          "Material-pass names the reference-derived albedo palette, roughness variation, tactile normal/bump/displacement response, and local masks.",
+          "When a source image is available, run reference PBR extraction and require confidence >= 0.7 before treating maps as implementation-ready.",
+          "Lighting-pass names key/fill/rim or environment light, exposure, tone mapping, background, and contact shadow behavior.",
+          "Neutral, grazing-angle, and reference-matched renders prove that surface relief survives relighting and is not painted into albedo."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model has acceptable shape but reads as flat shaded or plastic",
+          "colors are a generic average instead of reference-observed local color zones",
+          "lighting is evenly ambient and cannot reproduce the source value range"
+        ]
+      }
+    ],
+    "visualDeltaChecks": [
+      "silhouette and negative-space delta",
+      "component hierarchy depth delta",
+      "repetition density and distribution delta",
+      "material albedo/roughness/normal response delta",
+      "local feature placement and scale delta"
+    ],
+    "antiShallowSpecRules": [
+      "Do not proceed to code if qualityContract.qualityBar is unassessed.",
+      "Do not proceed to code if the spec only contains a root component for a moderate or complex object.",
+      "Do not proceed to code if required featureGroups are not represented by componentTree, materials, or repetitionSystems.",
+      "Do not proceed to code if visible local features are described only in prose and not attached to components/materials/evidenceRefs.",
+      "Do not proceed past structural-pass if attached child parts lack attachment.parentSocket, localStart, localEnd, embedDepth/overlap, and gapTolerance.",
+      "Do not pass material look-dev when albedo is reused as roughness, height, normal, or AO.",
+      "Do not pass material look-dev without macro, meso, and micro surface frequency bands for close-up materials.",
+      "Do not pass reference-fidelity material look-dev from a source image without usable referencePbr maps or an explicit documented limitation.",
+      "Do not patch a spec with extracted PBR maps when extraction confidence is below the target threshold unless the user explicitly accepts lower fidelity."
+    ]
+  },
+  "authoringInstruction": "Fill observed object class, complexity reasoning, featureGroups, visualDeltaChecks, and unknowns before generating or implementing ObjectSculptSpec."
+}
