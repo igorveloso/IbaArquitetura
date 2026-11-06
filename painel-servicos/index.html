@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel de Serviços</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Painel de Serviços</h1>
+      <div class="sub" id="sub">carregando…</div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="btn-copy" type="button" style="display:none">Copiar JSON</button>
+      <button class="btn" id="btn-import" type="button" style="display:none">Importar JSON</button>
+      <button class="btn primary" id="btn-new" type="button">Nova tarefa</button>
+      <button class="btn" id="btn-out" type="button" style="display:none">Sair</button>
+    </div>
+  </header>
+
+  <div class="tiles" id="tiles"></div>
+
+  <div class="bar">
+    <div class="tabs" role="tablist" aria-label="Visão">
+      <button class="tab" role="tab" data-view="prioridade" id="tab-prioridade">Prioridade</button>
+      <button class="tab" role="tab" data-view="cliente" id="tab-cliente">Por cliente</button>
+      <button class="tab" role="tab" data-view="pessoal" id="tab-pessoal">Pessoal</button>
+    </div>
+    <div class="filters">
+      <input type="search" id="q" placeholder="Buscar tarefa ou cliente" aria-label="Buscar">
+      <button class="chip" data-st="" aria-pressed="true" type="button">Todos</button>
+      <button class="chip" data-st="Minha ação" aria-pressed="false" type="button">Minha ação</button>
+      <button class="chip" data-st="Aguardando cliente" aria-pressed="false" type="button">Aguardando cliente</button>
+      <button class="chip" data-st="Monitorar" aria-pressed="false" type="button">Monitorar</button>
+      <label class="chk"><input type="checkbox" id="show-done"> concluídas</label>
+    </div>
+  </div>
+
+  <main id="list" aria-live="polite"></main>
+</div>
+
+<div class="scrim" id="scrim">
+  <form class="dlg" id="form" role="dialog" aria-modal="true" aria-labelledby="dlg-title">
+    <h3 id="dlg-title">Tarefa</h3>
+    <label class="fld" for="f-titulo">Tarefa<textarea id="f-titulo" required></textarea></label>
+    <div class="two">
+      <label class="fld" for="f-grupo">Grupo
+        <select id="f-grupo"><option value="empresa">Empresa</option><option value="pessoal">Pessoal</option></select></label>
+      <label class="fld" for="f-cliente">Cliente
+        <input id="f-cliente" list="clientes" autocomplete="off"></label>
+    </div>
+    <datalist id="clientes"></datalist>
+    <div class="two">
+      <label class="fld" for="f-status">Status
+        <select id="f-status"></select></label>
+      <label class="fld" for="f-nivel">Nível
+        <select id="f-nivel"></select></label>
+    </div>
+    <label class="fld" for="f-obs">Observação<textarea id="f-obs"></textarea></label>
+    <div class="foot">
+      <button class="btn danger" type="button" id="f-del">Excluir</button>
+      <div class="actions">
+        <button class="btn" type="button" id="f-cancel">Cancelar</button>
+        <button class="btn primary" type="submit">Salvar</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<div class="scrim" id="scrim-imp">
+  <form class="dlg" id="imp-form" role="dialog" aria-modal="true" aria-labelledby="imp-title">
+    <h3 id="imp-title">Importar JSON</h3>
+    <label class="fld" for="imp-text">Cole a lista exportada por “Copiar JSON”. Tarefas com o mesmo id são sobrescritas.
+      <textarea class="ta" id="imp-text" required></textarea></label>
+    <div class="err" id="imp-err" style="color:var(--crit);font-size:12px;min-height:16px"></div>
+    <div class="foot" style="justify-content:flex-end">
+      <button class="btn" type="button" id="imp-cancel">Cancelar</button>
+      <button class="btn primary" type="submit">Importar</button>
+    </div>
+  </form>
+</div>
+
+<div class="scrim" id="scrim-login">
+  <form class="login" id="login-form" aria-labelledby="login-title">
+    <h2 id="login-title">Entrar no painel</h2>
+    <label class="fld" for="l-email">E-mail<input id="l-email" type="email" autocomplete="username" required></label>
+    <label class="fld" for="l-senha">Senha<input id="l-senha" type="password" autocomplete="current-password" required></label>
+    <div class="err" id="login-err" role="alert"></div>
+    <button class="btn primary" type="submit">Entrar</button>
+  </form>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

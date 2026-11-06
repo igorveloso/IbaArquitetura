@@ -1,0 +1,16 @@
+{
+  "name": "painel-servicos",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Painel de serviços do escritório: tarefas por cliente, com prioridade e status",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "firebase": "^13.2.0",
+    "vite": "^8.3.6"
+  }
+}
