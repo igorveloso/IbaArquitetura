@@ -242,6 +242,9 @@ $("#imp-form").addEventListener("submit", async (e)=>{
 });
 
 /* ---------- início ---------- */
+// Backup e importação de JSON ficam ocultos; só aparecem em <endereço>/#admin.
+function syncAdmin(){ const on = location.hash === "#admin"; for (const id of ["#btn-copy","#btn-import"]) $(id).style.display = on ? "" : "none"; }
+window.addEventListener("hashchange", syncAdmin); syncAdmin();
 fillSelects(); syncTabs();
 if (!configOk){
   showMsg("Firebase não configurado. Copie .env.example para .env e preencha as chaves VITE_FIREBASE_*.", true);

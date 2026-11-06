@@ -57,7 +57,9 @@ Coleção `tasks`, um documento por tarefa:
 | docOrder | número | posição no documento original |
 | updatedAt | número (ms) | |
 
-### 5. Carregar a lista inicial
+### 5. Carregar a lista inicial (uma vez, por quem administra)
 
-Entre no app, clique em **Importar JSON** e cole o conteúdo do arquivo `painel-servicos-seed.json`
-(guardado fora do repositório). **Copiar JSON** exporta o estado atual no mesmo formato, serve de backup.
+Os botões **Importar JSON** e **Copiar JSON** ficam ocultos para o uso normal. Para ver os dois, abra o app
+com `#admin` no fim do endereço (ex.: `https://seu-painel.vercel.app/#admin`), entre, clique em
+**Importar JSON** e cole o conteúdo do arquivo `painel-servicos-seed.json` (guardado fora do repositório).
+**Copiar JSON** exporta o estado atual no mesmo formato, serve de backup.
